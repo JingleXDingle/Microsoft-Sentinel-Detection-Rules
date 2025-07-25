@@ -10,5 +10,6 @@ DeviceProcessEvents
     InitiatingProcessFileName,
     ProcessCommandLine,
     FileName,
+    SHA1,
     FolderPath
 | sort by TimeGenerated desc //Sorts by showing the most recent events first.
