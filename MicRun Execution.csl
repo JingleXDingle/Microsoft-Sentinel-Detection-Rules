@@ -12,4 +12,4 @@ DeviceProcessEvents
     FileName,
     SHA1,
     FolderPath
-| sort by TimeGenerated desc //Sorts by showing the most recent events first. Test
+| sort by TimeGenerated desc //Sorts by showing the most recent events first. 
