@@ -1,0 +1,14 @@
+DeviceProcessEvents
+| where tolower(FileName) == "micrun.exe"
+    or tolower(ProcessCommandLine) has "micrun.exe"
+| project //Dictates the columns that will be displayed by the query.
+    TimeGenerated,
+    ActionType,
+    DeviceName,
+    AccountName,
+    AccountUpn,
+    InitiatingProcessFileName,
+    ProcessCommandLine,
+    FileName,
+    FolderPath
+| sort by TimeGenerated desc //Sorts by showing the most recent events first.
