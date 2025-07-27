@@ -4,14 +4,14 @@ resource micrunExecutionAlert 'Microsoft.OperationalInsights/workspaces/provider
   name: '${workspaceName}/Microsoft.SecurityInsights/micrun-execution-alert'
   kind: 'Scheduled'
   properties: {
-    displayName: 'MicRun Execution Alert – Suspicious Process Activity'
+    displayName: 'MicRun Execution – Possible DeedRAT Backdoor Activity'
     description: '''
-This detection identifies the execution of MicRun.exe or related indicators on endpoints. 
-It monitors for processes named MicRun.exe, command lines containing "micrun.exe", or known malicious SHA1 hashes associated with MicRun. 
-The presence of these indicators may suggest unauthorized software execution or potential malware activity. 
-Security teams should investigate the source and context of the process to determine if it is legitimate or part of a threat.
+This detection identifies the execution of MicRun.exe or related indicators, which have been observed in recent DeedRAT backdoor campaigns attributed to Chinese APT groups. 
+DeedRAT leverages MicRun.exe for persistence and execution on compromised endpoints. 
+Detection includes process names, command lines, and known malicious hashes associated with MicRun.exe. 
+For further details, see: https://lab52.io/blog/deedrat-backdoor-enhanced-by-chinese-apts-with-advanced-capabilities/
 '''
-    severity: 'High'
+    severity: 'Medium'
     enabled: true
     query: '''
 DeviceProcessEvents
