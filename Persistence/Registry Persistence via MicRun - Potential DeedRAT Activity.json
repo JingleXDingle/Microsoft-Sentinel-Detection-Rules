@@ -1,0 +1,93 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/ca9625d3-2e63-4e3a-aa06-35c0ae3c8457')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/ca9625d3-2e63-4e3a-aa06-35c0ae3c8457')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2023-12-01-preview",
+            "properties": {
+                "displayName": "Registry Persistence via MicRun – Potential DeedRAT Activity",
+                "description": "This detection monitors for the creation of the following registry key entry:\n\nHKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\MicRun\n\nThis specific registry entry has been observed in recent DeedRAT backdoor campaigns, where threat actors establish persistence by configuring MicRun.exe to execute at user logon. The Run key is a common Windows autostart mechanism abused by malware to ensure continued execution across reboots without requiring elevated privileges.\n\nCreation of this registry key may indicate the presence of DeedRAT or similar loader activity. Security teams should review the initiating process and associated command line to determine if this is malicious or part of authorized software behavior.\n\nReferences:\n\nDeedRAT Analysis – Lab52: https://lab52.io/blog/deedrat-backdoor-enhanced-by-chinese-apts-with-advanced-capabilities/",
+                "severity": "High",
+                "enabled": true,
+                "query": "//This query matches the creation of the malicious registry entry 
+                // \r\n//HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\MicRun\r\n\r\nDeviceRegistryEvents\r\n
+                // | where ActionType has \"RegistryKeyCreated\"\r\n
+                // | where RegistryKey matches regex @\"(?i)^HKEY_CURRENT_USER\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\\\\MicRun$\"\r\n
+                // |project //Dictates the columns that will be displayed by the query.\r\n    
+                // TimeGenerated,\r\n    
+                // ActionType,\r\n    
+                // DeviceName,\r\n    
+                // RegistryKey,\r\n    
+                // InitiatingProcessCommandLine,\r\n    
+                // InitiatingProcessFileName,\r\n    
+                // InitiatingProcessFolderPath\r\n    
+                // |sort by TimeGenerated desc //Sorts results by displaying the most recent results first.\r\n\r\n    \r\n\r\n\r\n\r\n",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Persistence"
+                ],
+                "techniques": [
+                    "T1547"
+                ],
+                "subTechniques": [
+                    "T1547.001"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": true,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "DeviceName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "RegistryKey",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Key",
+                                "columnName": "RegistryKey"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}
