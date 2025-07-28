@@ -1,4 +1,0 @@
-//This query monitors the creation of the MicRun service used for persistance.
-SecurityEvent
-| where EventID in (4697)
-| where ServiceName has "MicRun"
