@@ -1,0 +1,83 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/204862ae-c3a2-408e-b74a-1963f4061229')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/204862ae-c3a2-408e-b74a-1963f4061229')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2023-12-01-preview",
+            "properties": {
+                "displayName": "Suspicious NTLM Authentication to Certificate Authority Servers from Unexpected Accounts",
+                "description": "This alert detects NTLM authentication attempts to designated Certificate Authority (CA) servers where the authenticating account is not the expected machine account for that CA host. NTLM authentication to CA servers is typically limited to their own system accounts for certificate issuance processes. Any authentication from a different account—such as a domain user, service account, or another system—may indicate potential misuse, NTLM relay, or Active Directory Certificate Services (AD CS) exploitation (e.g., ESC8). This rule monitors for such anomalous authentication behavior and should be investigated to determine if unauthorized access is being attempted against PKI infrastructure.",
+                "severity": "Informational",
+                "enabled": true,
+                "query": "SecurityEvent\r\n| where EventID == 4776\r\n| where Workstation has_any (\r\n    \"SV000CAISSUE01\", \"SV000CAWEB01\", \"SV000CAROOT01\",\r\n    \"A01ISSUECA01\", \"A01WEBCA01\", \"A01CAROOT01\"\r\n)\r\n| where TargetUserName !in~ (\r\n    \"SV000CAISSUE01$\", \"SV000CAWEB01$\", \"SV000CAROOT01$\",\r\n    \"A01ISSUECA01$\", \"A01WEBCA01$\", \"A01CAROOT01$\"\r\n)\r\n| project TimeGenerated, Activity, EventID, Computer, TargetUserName, Workstation\r\n",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "CredentialAccess",
+                    "LateralMovement"
+                ],
+                "techniques": [
+                    "T1557",
+                    "T1649"
+                ],
+                "subTechniques": [
+                    "T1557.001"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": true,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "TargetUserName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "Workstation"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}
