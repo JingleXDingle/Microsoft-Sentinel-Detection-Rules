@@ -1,0 +1,113 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "Leave Empty for new Alert Rule",
+            "name": "Leave Empty for new Alert Rule",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2023-12-01-preview",
+            "properties": {
+                "displayName": "Name for your Alert Rule",
+                "description": "Description for your Alert Rule",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "DeviceProcessEvents\r\n| where tolower(FileName) == \"micrun.exe\"\r\n    or tolower(ProcessCommandLine) has \"micrun.exe\"\r\n    or SHA1 has \"e356dbd3bd62c19fa3ff8943fc73a4fab01a6446f989318b7da4abf48d565af2\"\r\n| project //Dictates the columns that will be displayed by the query.\r\n    TimeGenerated,\r\n    ActionType,\r\n    DeviceName,\r\n    AccountName,\r\n    AccountUpn,\r\n    InitiatingProcessFileName,\r\n    ProcessCommandLine,\r\n    FileName,\r\n    SHA1,\r\n    FolderPath\r\n| sort by TimeGenerated desc //Sorts by showing the most recent events first.",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "Execution"
+                ],
+                "techniques": [
+                    "T0863",
+                    "T1053",
+                    "T1204"
+                ],
+                "subTechniques": [
+                    "T1053.005",
+                    "T1204.002"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": true,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": {
+                    "alertDynamicProperties": []
+                },
+                "customDetails": {},
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "AccountName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "DeviceName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "File",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "FileName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "FileHash",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Value",
+                                "columnName": "SHA1"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Mailbox",
+                        "fieldMappings": [
+                            {
+                                "identifier": "MailboxPrimaryAddress",
+                                "columnName": "AccountUpn"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}
