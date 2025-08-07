@@ -1,4 +1,4 @@
-# $schema: https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#  # Leave lines 1 to 8 unchanged
+$schema: https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#  # Leave lines 1 to 8 unchanged
 contentVersion: "1.0.0.0" # Leave unchanged.
 parameters: # Leave unchanged.
   workspace: # Leave unchanged.
