@@ -4,23 +4,23 @@ parameters:
   workspace:
     type: String
 resources:
-  - id:    # Leave empty when creating a new rule, replace with full resource ID when updating an existing rule
-    name:  # Leave empty when creating a new rule replace with the name of your detection rule when updating an existing rule
-    type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged
-    kind: Scheduled # Leave unchanged
-    apiVersion: 2023-12-01-preview # Leave unchanged
+  - id:    # Leave empty when creating a new rule, replace with full resource ID when updating an existing rule.
+    name:  # Leave empty when creating a new rule replace with the name of your detection rule when updating an existing rule.
+    type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged.
+    kind: Scheduled # This must be set to Scheduled for scheduled rules, leave unchanged.
+    apiVersion: 2023-12-01-preview # Leave unchanged.
     properties:
-      displayName: SampleValue # Replace with the name of your detection rule
-      description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax
-      severity: Medium # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High
+      displayName: SampleValue # Replace with the name of your detection rule. You must follow proper YAML syntax.
+      description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
+      severity: Medium # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
       enabled: true # Set to true to enable the rule, false to disable
-      query: SampleValue # Replace with the KQL query for your detection rule, you must follow proper YAML syntax
+      query: SampleValue # Replace with the KQL query for your detection rule, you must follow proper YAML syntax.
       queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
       queryPeriod: PT5M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
-      triggerOperator: GreaterThan # Leave unchanged
-      triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0
+      triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
+      triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0.
       suppressionDuration: PT5H # Replace with how long to suppress duplicate alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
-      suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false
+      suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false.
       startTimeUtc: null # Leave unchanged
       tactics: # Replace with the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
         - Execution
@@ -69,4 +69,4 @@ resources:
             - identifier: MailboxPrimaryAddress
               columnName: AccountUpn
       sentinelEntitiesMappings: null # Leave unchanged unless you are using Sentinel entity mappings.
-      templateVersion: null # Leave unchanged unless you are using a specific template
+      templateVersion: null # Leave unchanged unless you are using a specific template.
