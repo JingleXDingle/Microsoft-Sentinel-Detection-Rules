@@ -12,7 +12,7 @@ resources:
     properties: #Properties of the detection rule, leave this line unchanged.
       displayName: SampleValue # Replace with the name of your detection rule. You must follow proper YAML syntax.
       description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
-      severity: Medium # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
+      severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
       enabled: true # Set to true to enable the rule, false to disable
       query: SampleValue # Replace with the KQL query for your detection rule, you must follow proper YAML syntax.
       queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
