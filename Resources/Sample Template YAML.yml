@@ -51,7 +51,7 @@ resources:
         - entityType: Account # Replace with the entity type, e.g. Account, Host, File, FileHash, Mailbox, etc.
           fieldMappings:
             - identifier: Name # Replace with the entity field identifier, e.g. Name for Account, HostName for Host, etc.
-              columnName: AccountName # Replace with the name of the column in your query results that contains this information. Test
+              columnName: AccountName # Replace with the name of the column in your query results that contains this information. 
         - entityType: Host
           fieldMappings:
             - identifier: HostName
