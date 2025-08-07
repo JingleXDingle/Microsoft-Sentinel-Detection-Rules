@@ -1,15 +1,15 @@
 # $schema: https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#  # Leave lines 1 to 8 unchanged
-contentVersion: "1.0.0.0"
-parameters:
-  workspace:
-    type: String
+contentVersion: "1.0.0.0" # Leave unchanged.
+parameters: # Leave unchanged.
+  workspace: # Leave unchanged.
+    type: String # Leave unchanged.
 resources:
   - id:    # Leave empty when creating a new rule, replace with full resource ID when updating an existing rule.
     name:  # Leave empty when creating a new rule replace with the name of your detection rule when updating an existing rule.
     type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged.
     kind: Scheduled # This must be set to Scheduled for scheduled rules, leave unchanged.
     apiVersion: 2023-12-01-preview # Leave unchanged.
-    properties:
+    properties: #Properties of the detection rule, leave this line unchanged.
       displayName: SampleValue # Replace with the name of your detection rule. You must follow proper YAML syntax.
       description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
       severity: Medium # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
@@ -18,17 +18,17 @@ resources:
       queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
       queryPeriod: PT5M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
       triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
-      triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0.
+      triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0 when using GreaterThan.
       suppressionDuration: PT5H # Replace with how long to suppress duplicate alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
       suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false.
       startTimeUtc: null # Leave unchanged
-      tactics: # Replace with the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
+      tactics: # Include the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
         - Execution
-      techniques: # Replace with the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
+      techniques: # Include the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
         - T0863
         - T1053
         - T1204
-      subTechniques: # Replace with the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
+      subTechniques: # Include the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
         - T1053.005
         - T1204.002
       alertRuleTemplateName: null # Leave unchanged unless you are using a template.
