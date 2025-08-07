@@ -1,0 +1,113 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspace": {
+      "type": "String"
+    }
+  },
+  "resources": [
+    {
+      "id": null,
+      "name": null,
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "kind": "Scheduled",
+      "apiVersion": "2023-12-01-preview",
+      "properties": {
+        "displayName": "SampleValue",
+        "description": "SampleValue",
+        "severity": "Medium",
+        "enabled": true,
+        "query": "SampleValue",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT5M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "suppressionDuration": "PT5H",
+        "suppressionEnabled": false,
+        "startTimeUtc": null,
+        "tactics": [
+          "Execution"
+        ],
+        "techniques": [
+          "T0863",
+          "T1053",
+          "T1204"
+        ],
+        "subTechniques": [
+          "T1053.005",
+          "T1204.002"
+        ],
+        "alertRuleTemplateName": null,
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        },
+        "customDetails": {},
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "AccountName"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "File",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "FileName"
+              }
+            ]
+          },
+          {
+            "entityType": "FileHash",
+            "fieldMappings": [
+              {
+                "identifier": "Value",
+                "columnName": "SHA1"
+              }
+            ]
+          },
+          {
+            "entityType": "Mailbox",
+            "fieldMappings": [
+              {
+                "identifier": "MailboxPrimaryAddress",
+                "columnName": "AccountUpn"
+              }
+            ]
+          }
+        ],
+        "sentinelEntitiesMappings": null,
+        "templateVersion": null
+      }
+    }
+  ]
+}
