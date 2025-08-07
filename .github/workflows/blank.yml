@@ -23,10 +23,13 @@ jobs:
       - name: Install yamljs
         run: npm install -g yamljs
 
-      - name: Convert only changed YAML files to JSON
+      - name: Convert only changed or new YAML files to JSON
         run: |
           git fetch origin ${{ github.base_ref || 'main' }}
-          git diff --name-only origin/${{ github.base_ref || 'main' }} | grep -E '\.ya?ml$' | while read file; do
+          (
+            git diff --name-only origin/${{ github.base_ref || 'main' }}
+            git ls-files --others --exclude-standard
+          ) | grep -E '\.ya?ml$' | sort -u | while read file; do
             [ -f "$file" ] || continue
             json_file="${file%.*}.json"
             yaml2json "$file" | jq '.' > "$json_file"
