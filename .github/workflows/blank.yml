@@ -3,8 +3,8 @@ name: Convert YAML Detection Rules to JSON
 on:
   push:
     paths:
-      - 'Persistence'
-      - 'rules/**/*.yaml'
+      - '**/*.yml'
+      - '**/*.yaml'
   workflow_dispatch:
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Convert YAML files to JSON
         run: |
-          find rules -type f \( -name "*.yml" -o -name "*.yaml" \) | while read file; do
+          find . -type f \( -name "*.yml" -o -name "*.yaml" \) | while read file; do
             json_file="${file%.*}.json"
             yaml2json "$file" > "$json_file"
           done
@@ -34,4 +34,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Auto-convert YAML detection rules to JSON"
-          file_pattern: rules/**/*.json
+          file_pattern: '**/*.json'
