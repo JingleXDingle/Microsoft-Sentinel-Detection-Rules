@@ -23,6 +23,14 @@ jobs:
       - name: Install yamljs
         run: npm install -g yamljs
 
+      - name: Debug - List changed or new YAML files
+        run: |
+          git fetch origin ${{ github.base_ref || 'main' }}
+          (
+            git diff --name-only origin/${{ github.base_ref || 'main' }}
+            git ls-files --others --exclude-standard
+          ) | grep -E '\.ya?ml$' | sort -u || echo "No YAML files changed or added"
+
       - name: Convert only changed or new YAML files to JSON
         run: |
           git fetch origin ${{ github.base_ref || 'main' }}
