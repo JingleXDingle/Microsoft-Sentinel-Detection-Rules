@@ -18,7 +18,7 @@
         "description": "SampleValue",
         "severity": "Low",
         "enabled": true,
-        "query": "SampleValue",
+        "query": "DeviceProcessEvents\n| where tolower(FileName) == \"micrun.exe\"\nor tolower(ProcessCommandLine) has \"micrun.exe\"\nor SHA1 has \"e356dbd3bd62c19fa3ff8943fc73a4fab01a6446f989318b7da4abf48d565af2\"\n| project //Dictates the columns that will be displayed by the query.\nTimeGenerated,\nActionType,\nDeviceName,\nAccountName,\nAccountUpn,\nInitiatingProcessFileName,\nProcessCommandLine,\nFileName,\nSHA1,\nFolderPath\n| sort by TimeGenerated desc //Sorts by showing the most recent events first.\n",
         "queryFrequency": "PT5M",
         "queryPeriod": "PT5M",
         "triggerOperator": "GreaterThan",
