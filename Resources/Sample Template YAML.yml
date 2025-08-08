@@ -14,7 +14,23 @@ resources:
       description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
       severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
       enabled: true # Set to true to enable the rule, false to disable
-      query: SampleValue # Replace with the KQL query for your detection rule, you must follow proper YAML syntax.
+      query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax.
+       DeviceProcessEvents
+       | where tolower(FileName) == "micrun.exe"
+       or tolower(ProcessCommandLine) has "micrun.exe"
+       or SHA1 has "e356dbd3bd62c19fa3ff8943fc73a4fab01a6446f989318b7da4abf48d565af2"
+       | project //Dictates the columns that will be displayed by the query.
+       TimeGenerated,
+       ActionType,
+       DeviceName,
+       AccountName,
+       AccountUpn,
+       InitiatingProcessFileName,
+       ProcessCommandLine,
+       FileName,
+       SHA1,
+       FolderPath
+       | sort by TimeGenerated desc //Sorts by showing the most recent events first.
       queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
       queryPeriod: PT5M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
       triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
