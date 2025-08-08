@@ -14,7 +14,7 @@ resources:
       description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
       severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
       enabled: true # Set to true to enable the rule, false to disable
-      query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax.
+      query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax. For multiline queries, use the pipe (|) character at the beggining.
        DeviceProcessEvents
        | where tolower(FileName) == "micrun.exe"
        or tolower(ProcessCommandLine) has "micrun.exe"
