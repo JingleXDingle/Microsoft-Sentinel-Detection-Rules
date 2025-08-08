@@ -108,7 +108,7 @@
             "entityType": "Process",
             "fieldMappings": [
               {
-                "identifier": "Commandline",
+                "identifier": "CommandLine",
                 "columnName": "ProcessCommandLine"
               }
             ]
