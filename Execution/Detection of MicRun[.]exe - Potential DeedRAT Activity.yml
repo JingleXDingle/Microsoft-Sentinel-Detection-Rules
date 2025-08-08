@@ -86,7 +86,7 @@ resources:
               columnName: AccountUpn
         - entityType: Process
           fieldMappings:
-            - identifier: Commandline
+            - identifier: CommandLine
               columnName: ProcessCommandLine
       sentinelEntitiesMappings: null # Leave unchanged unless you are using Sentinel entity mappings.
       templateVersion: null # Leave unchanged unless you are using a specific template.
