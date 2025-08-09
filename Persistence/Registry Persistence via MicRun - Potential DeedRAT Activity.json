@@ -1,81 +1,92 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "workspace": {
-            "type": "String"
-        }
-    },
-    "resources": [
-        {
-            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/ca9625d3-2e63-4e3a-aa06-35c0ae3c8457')]",
-            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/ca9625d3-2e63-4e3a-aa06-35c0ae3c8457')]",
-            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
-            "kind": "Scheduled",
-            "apiVersion": "2023-12-01-preview",
-            "properties": {
-                "displayName": "Registry Persistence via MicRun – Potential DeedRAT Activity",
-                "description": "This detection monitors for the creation of the following registry key entry:\n\nHKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\MicRun\n\nThis specific registry entry has been observed in recent DeedRAT backdoor campaigns, where threat actors establish persistence by configuring MicRun.exe to execute at user logon. The Run key is a common Windows autostart mechanism abused by malware to ensure continued execution across reboots without requiring elevated privileges.\n\nCreation of this registry key may indicate the presence of DeedRAT or similar loader activity. Security teams should review the initiating process and associated command line to determine if this is malicious or part of authorized software behavior.\n\nReferences:\n\nDeedRAT Analysis – Lab52: https://lab52.io/blog/deedrat-backdoor-enhanced-by-chinese-apts-with-advanced-capabilities/",
-                "severity": "High",
-                "enabled": true,
-                "query": "DeviceRegistryEvents\n| where ActionType has \"RegistryKeyCreated\"\n| where RegistryKey matches regex \"(?i)^HKEY_CURRENT_USER\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\\\\MicRun$\"\n| project TimeGenerated, ActionType, DeviceName, RegistryKey, InitiatingProcessCommandLine, InitiatingProcessFileName, InitiatingProcessFolderPath\n| sort by TimeGenerated desc",
-                "queryFrequency": "PT5M",
-                "queryPeriod": "PT5M",
-                "triggerOperator": "GreaterThan",
-                "triggerThreshold": 0,
-                "suppressionDuration": "PT5H",
-                "suppressionEnabled": false,
-                "startTimeUtc": null,
-                "tactics": [
-                    "Persistence" 
-                ],
-                "techniques": [
-                    "T1547"
-                ],
-                "subTechniques": [
-                    "T1547.001"
-                ],
-                "alertRuleTemplateName": null,
-                "incidentConfiguration": {
-                    "createIncident": true,
-                    "groupingConfiguration": {
-                        "enabled": true,
-                        "reopenClosedIncident": false,
-                        "lookbackDuration": "PT5H",
-                        "matchingMethod": "AllEntities",
-                        "groupByEntities": [],
-                        "groupByAlertDetails": [],
-                        "groupByCustomDetails": []
-                    }
-                },
-                "eventGroupingSettings": {
-                    "aggregationKind": "SingleAlert"
-                },
-                "alertDetailsOverride": null,
-                "customDetails": null,
-                "entityMappings": [
-                    {
-                        "entityType": "Host",
-                        "fieldMappings": [
-                            {
-                                "identifier": "HostName",
-                                "columnName": "DeviceName"
-                            }
-                        ]
-                    },
-                    {
-                        "entityType": "RegistryKey",
-                        "fieldMappings": [
-                            {
-                                "identifier": "Key",
-                                "columnName": "RegistryKey"
-                            }
-                        ]
-                    }
-                ],
-                "sentinelEntitiesMappings": null,
-                "templateVersion": null
-            }
-        }
-    ]
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspace": {
+      "type": "String"
+    }
+  },
+  "resources": [
+    {
+      "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/ca9625d3-2e63-4e3a-aa06-35c0ae3c8457')]",
+      "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/ca9625d3-2e63-4e3a-aa06-35c0ae3c8457')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "kind": "Scheduled",
+      "apiVersion": "2023-12-01-preview",
+      "properties": {
+        "displayName": "Registry Persistence via MicRun: Potential DeedRAT Activity",
+        "description": "This detection monitors for the creation of the following registry key entry:\nHKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\MicRun\nThis specific registry entry has been observed in recent DeedRAT backdoor campaigns, where threat actors establish persistence by configuring MicRun.exe to execute at user logon. \nThe Run key is a common Windows autostart mechanism abused by malware to ensure continued execution across reboots without requiring elevated privileges.\nCreation of this registry key may indicate the presence of DeedRAT or similar loader activity. \nSecurity teams should review the initiating process and associated command line to determine if this is malicious or part of authorized software behavior.\n\nReferences: DeedRAT Analysis: Lab52: https://lab52.io/blog/deedrat-backdoor-enhanced-by-chinese-apts-with-advanced-capabilities/\n",
+        "severity": "High",
+        "enabled": true,
+        "query": "DeviceRegistryEvents\n| where ActionType == 'RegistryKeyCreated'\n| where RegistryKey =~ 'HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\MicRun'\n| project TimeGenerated, ActionType, DeviceName, RegistryKey, InitiatingProcessCommandLine, InitiatingProcessFileName, InitiatingProcessFolderPath\n| sort by TimeGenerated desc\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT5M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "suppressionDuration": "PT5H",
+        "suppressionEnabled": false,
+        "startTimeUtc": null,
+        "tactics": [
+          "Persistence"
+        ],
+        "techniques": [
+          "T1547"
+        ],
+        "subTechniques": [
+          "T1547.001"
+        ],
+        "alertRuleTemplateName": null,
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        },
+        "customDetails": {},
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "AccountName"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "RegistryKey",
+            "fieldMappings": [
+              {
+                "identifier": "Key",
+                "columnName": "RegistryKey"
+              }
+            ]
+          }
+        ],
+        "sentinelEntitiesMappings": null,
+        "templateVersion": null
+      }
+    }
+  ]
 }
