@@ -3,32 +3,53 @@ name: Convert YAML Detection Rules to JSON
 on:
   push:
     paths:
-      - 'Detections/**/*.yml'
-      - 'Detections/**/*.yaml'
-      - 'Resources/**/*.yml'
-      - 'Resources/**/*.yaml'
+      - '**/Detections/**/*.yml'
+      - '**/Detections/**/*.yaml'
+      - '**/Resources/**/*.yml'
+      - '**/Resources/**/*.yaml'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   yaml-to-json:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Setup tools
+        run: |
+          npm install -g yamljs
+          sudo apt-get update
+          sudo apt-get install -y jq
 
-      - name: Install yamljs
-        run: npm install -g yamljs
+      - name: Debug tree
+        run: |
+          echo "Repo tree around Detections:"
+          ls -la
+          find . -maxdepth 3 -type d -name "Detections" -print
 
       - name: Convert YAML files to JSON
+        shell: bash
         run: |
-          find ./Detections ./Resources -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null | while IFS= read -r -d '' file; do
+          set -euo pipefail
+
+          # Find YAML files anywhere whose path includes /Detections/ or /Resources/
+          mapfile -d '' files < <(find . -type f \( -name "*.yml" -o -name "*.yaml" \) \
+            \( -path "*/Detections/*" -o -path "*/Resources/*" \) -print0)
+
+          echo "Found ${#files[@]} YAML file(s)."
+          if (( ${#files[@]} == 0 )); then
+            echo "Nothing to convert."
+            exit 0
+          fi
+
+          printf 'Converting:\n - %s\n' "${files[@]}"
+          for file in "${files[@]}"; do
             json_file="${file%.*}.json"
+            mkdir -p "$(dirname "$json_file")"
             yaml2json "$file" | jq '.' > "$json_file"
           done
 
