@@ -61,5 +61,5 @@ jobs:
         with:
           commit_message: "Auto-convert YAML detection rules to JSON"
           file_pattern: |
-            Detections/**/*.json
-            Resources/**/*.json
+           Resources/*.json
+           Detections/**/*.json           
