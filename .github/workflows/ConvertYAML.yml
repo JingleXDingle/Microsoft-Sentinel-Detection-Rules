@@ -36,9 +36,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Find YAML files anywhere whose path includes /Detections/ or /Resources/
-          mapfile -d '' files < <(find . -type f \( -name "*.yml" -o -name "*.yaml" \) \
-            \( -path "*/Detections/*" -o -path "*/Resources/*" \) -print0)
+          # Collect YAML files from Detections (recursive) and Resources (root only)
+          mapfile -d '' files < <(
+            find ./Detections  -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null
+            find ./Resources -maxdepth 1 -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null
+          )
 
           echo "Found ${#files[@]} YAML file(s)."
           if (( ${#files[@]} == 0 )); then
@@ -51,6 +53,7 @@ jobs:
             json_file="${file%.*}.json"
             mkdir -p "$(dirname "$json_file")"
             yaml2json "$file" | jq '.' > "$json_file"
+            echo "Wrote: $json_file"
           done
 
       - name: Commit and push JSON files
