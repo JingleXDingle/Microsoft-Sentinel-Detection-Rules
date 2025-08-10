@@ -58,3 +58,4 @@ jobs:
         with:
           commit_message: "Auto-convert YAML detection rules to JSON"
           file_pattern: '**/*.json'
+          add_options: '-A -f'   # Force add even if ignored
