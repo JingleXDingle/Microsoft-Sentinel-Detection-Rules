@@ -16,7 +16,7 @@
       "properties": {
         "displayName": "Registry Persistence via MicRun: Potential DeedRAT Activity",
         "description": "This detection monitors for the creation of the following registry key entry:\nHKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\MicRun\nThis specific registry entry has been observed in recent DeedRAT backdoor campaigns, where threat actors establish persistence by configuring MicRun.exe to execute at user logon. \nThe Run key is a common Windows autostart mechanism abused by malware to ensure continued execution across reboots without requiring elevated privileges.\nCreation of this registry key may indicate the presence of DeedRAT or similar loader activity. \nSecurity teams should review the initiating process and associated command line to determine if this is malicious or part of authorized software behavior.\n\nReferences: DeedRAT Analysis: Lab52: https://lab52.io/blog/deedrat-backdoor-enhanced-by-chinese-apts-with-advanced-capabilities/\n",
-        "severity": "Low",
+        "severity": "High",
         "enabled": true,
         "query": "DeviceRegistryEvents\n| where ActionType == 'RegistryKeyCreated'\n| where RegistryKey =~ 'HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\MicRun'\n| project TimeGenerated, ActionType, DeviceName, RegistryKey, InitiatingProcessCommandLine, InitiatingProcessFileName, InitiatingProcessFolderPath\n| sort by TimeGenerated desc\n",
         "queryFrequency": "PT5M",
