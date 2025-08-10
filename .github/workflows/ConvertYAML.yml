@@ -5,8 +5,8 @@ on:
     paths:
       - '**/Detections/**/*.yml'
       - '**/Detections/**/*.yaml'
-      - '**/Resources/**/*.yml'
-      - '**/Resources/**/*.yaml'
+      - '**/Resources/*.yml'
+      - '**/Resources/*.yaml'
   workflow_dispatch:
 
 permissions:
