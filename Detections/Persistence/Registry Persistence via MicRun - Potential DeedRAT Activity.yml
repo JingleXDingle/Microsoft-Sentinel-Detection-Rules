@@ -20,7 +20,7 @@ resources:
         Security teams should review the initiating process and associated command line to determine if this is malicious or part of authorized software behavior.
 
         References: DeedRAT Analysis: Lab52: https://lab52.io/blog/deedrat-backdoor-enhanced-by-chinese-apts-with-advanced-capabilities/ 
-      severity: High # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
+      severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
       enabled: true # Set to true to enable the rule, false to disable
       query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax. For multiline queries, use the pipe (|) character at the beggining.
        DeviceRegistryEvents
