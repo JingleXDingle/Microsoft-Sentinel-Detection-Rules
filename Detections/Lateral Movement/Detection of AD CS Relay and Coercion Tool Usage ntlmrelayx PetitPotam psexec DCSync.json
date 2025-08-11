@@ -1,109 +1,118 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "workspace": {
-            "type": "String"
-        }
-    },
-    "resources": [
-        {
-            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/6894170c-2ef4-4819-acf0-de76db4051fa')]",
-            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/6894170c-2ef4-4819-acf0-de76db4051fa')]",
-            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
-            "kind": "Scheduled",
-            "apiVersion": "2023-12-01-preview",
-            "properties": {
-                "displayName": "Detection of AD CS Relay and Coercion Tool Usage (ntlmrelayx, PetitPotam, psexec, DCSync)",
-                "description": "This rule identifies the execution of tools and command-line patterns commonly used in Active Directory Certificate Services (AD CS) relay and coercion attacks. It monitors for known utilities such as ntlmrelayx.py, PetitPotam, and psexec.py, which are often used in NTLM relay scenarios or lateral movement. The rule also inspects for suspicious command-line arguments, including certificate enrollment requests via HTTP (/certsrv/), pass-the-hash options, and DCSync operations used to extract credentials from domain controllers. These behaviors are indicative of techniques such as ESC8 abuse, NTLM authentication relays, and privilege escalation via certificate-based access.\n\nRefer to the following article for more details: https://www.hackingarticles.in/domain-escalation-petitpotam-ntlm-relay-to-adcs-endpoints/",
-                "severity": "High",
-                "enabled": true,
-                "query": "// Define tool names used in common relay/coercion/lateral movement\r\nlet toolIdentifiers = dynamic([\r\n    \"ntlmrelayx.py\",\r\n    \"PetitPotam.py\",\r\n    \"PetitPotam.exe\",\r\n    \"psexec.py\"\r\n]);\r\n// Define malicious or suspicious command-line patterns for those tools\r\nlet attackCommands = dynamic([\r\n    \"ntlmrelayx.py -t\",\r\n    \"ntlmrelayx.py -t http:\",\r\n    \"PetitPotam.py -d bkuna\",\r\n    \"PetitPotam.exe -d bkuna\",\r\n    \"lsadump::dcsync /domain:\",\r\n    \"psexec.py -hashes\"\r\n]);\r\nDeviceProcessEvents \r\n| where ProcessCommandLine has_any (toolIdentifiers) \r\n   or ProcessCommandLine has_any (attackCommands)\r\n| project TimeGenerated, AccountDomain, AccountName, DeviceName, AccountUpn, ProcessCommandLine, SHA256, FileName, InitiatingProcessFileName, InitiatingProcessCommandLine\r\n| sort by TimeGenerated desc\r\n",
-                "queryFrequency": "PT5M",
-                "queryPeriod": "PT5M",
-                "triggerOperator": "GreaterThan",
-                "triggerThreshold": 0,
-                "suppressionDuration": "PT5H",
-                "suppressionEnabled": false,
-                "startTimeUtc": null,
-                "tactics": [
-                    "CredentialAccess",
-                    "LateralMovement"
-                ],
-                "techniques": [
-                    "T1649"
-                ],
-                "subTechniques": [],
-                "alertRuleTemplateName": null,
-                "incidentConfiguration": {
-                    "createIncident": true,
-                    "groupingConfiguration": {
-                        "enabled": true,
-                        "reopenClosedIncident": false,
-                        "lookbackDuration": "PT5H",
-                        "matchingMethod": "AllEntities",
-                        "groupByEntities": [],
-                        "groupByAlertDetails": [],
-                        "groupByCustomDetails": []
-                    }
-                },
-                "eventGroupingSettings": {
-                    "aggregationKind": "SingleAlert"
-                },
-                "alertDetailsOverride": {
-                    "alertDynamicProperties": []
-                },
-                "customDetails": {},
-                "entityMappings": [
-                    {
-                        "entityType": "Account",
-                        "fieldMappings": [
-                            {
-                                "identifier": "Name",
-                                "columnName": "AccountName"
-                            }
-                        ]
-                    },
-                    {
-                        "entityType": "Host",
-                        "fieldMappings": [
-                            {
-                                "identifier": "HostName",
-                                "columnName": "DeviceName"
-                            }
-                        ]
-                    },
-                    {
-                        "entityType": "FileHash",
-                        "fieldMappings": [
-                            {
-                                "identifier": "Value",
-                                "columnName": "SHA256"
-                            }
-                        ]
-                    },
-                    {
-                        "entityType": "Process",
-                        "fieldMappings": [
-                            {
-                                "identifier": "CommandLine",
-                                "columnName": "ProcessCommandLine"
-                            }
-                        ]
-                    },
-                    {
-                        "entityType": "Mailbox",
-                        "fieldMappings": [
-                            {
-                                "identifier": "MailboxPrimaryAddress",
-                                "columnName": "AccountUpn"
-                            }
-                        ]
-                    }
-                ],
-                "sentinelEntitiesMappings": null,
-                "templateVersion": null
-            }
-        }
-    ]
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspace": {
+      "type": "String"
+    }
+  },
+  "resources": [
+    {
+      "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/6894170c-2ef4-4819-acf0-de76db4051fa')]",
+      "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/6894170c-2ef4-4819-acf0-de76db4051fa')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "kind": "Scheduled",
+      "apiVersion": "2023-12-01-preview",
+      "properties": {
+        "displayName": "Detection of AD CS Relay and Coercion Tool Usage (ntlmrelayx, PetitPotam, psexec, DCSync)",
+        "description": "This rule identifies the execution of tools and command-line patterns commonly used in Active Directory Certificate Services (AD CS) relay and coercion attacks. It monitors for known utilities such as ntlmrelayx.py, PetitPotam, and psexec.py, which are often used in NTLM relay scenarios or lateral movement. The rule also inspects for suspicious command-line arguments, including certificate enrollment requests via HTTP (/certsrv/), pass-the-hash options, and DCSync operations used to extract credentials from domain controllers. These behaviors are indicative of techniques such as ESC8 abuse, NTLM authentication relays, and privilege escalation via certificate-based access. Refer to the following article for more details: https://www.hackingarticles.in/domain-escalation-petitpotam-ntlm-relay-to-adcs-endpoints/",
+        "severity": "Low",
+        "enabled": true,
+        "query": "// Define tool names used in common relay/coercion/lateral movement\nlet toolIdentifiers = dynamic([\n\"ntlmrelayx.py\",\n\"PetitPotam.py\",\n\"PetitPotam.exe\",\n\"psexec.py\"\n]);\n// Define malicious or suspicious command-line patterns for those tools\nlet attackCommands = dynamic([\n \"ntlmrelayx.py -t\",\n \"ntlmrelayx.py -t http:\",\n \"PetitPotam.py -d bkuna\",\n \"PetitPotam.exe -d bkuna\",\n \"lsadump::dcsync /domain:\",\n \"psexec.py -hashes\"\n ]);\n DeviceProcessEvents\n | where ProcessCommandLine has_any (toolIdentifiers)\n   or ProcessCommandLine has_any (attackCommands)\n | project TimeGenerated, AccountDomain, AccountName, DeviceName, AccountUpn, ProcessCommandLine, SHA256, FileName, InitiatingProcessFileName, InitiatingProcessCommandLine\n | sort by TimeGenerated desc\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT5M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "suppressionDuration": "PT5H",
+        "suppressionEnabled": false,
+        "startTimeUtc": null,
+        "tactics": [
+          "CredentialAccess",
+          "LateralMovement"
+        ],
+        "techniques": [
+          "T1649"
+        ],
+        "subTechniques": null,
+        "alertRuleTemplateName": null,
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        },
+        "customDetails": {},
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "AccountName"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "File",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "FileName"
+              }
+            ]
+          },
+          {
+            "entityType": "FileHash",
+            "fieldMappings": [
+              {
+                "identifier": "Value",
+                "columnName": "SHA256"
+              }
+            ]
+          },
+          {
+            "entityType": "Process",
+            "fieldMappings": [
+              {
+                "identifier": "CommandLine",
+                "columnName": "ProcessCommandLine"
+              }
+            ]
+          },
+          {
+            "entityType": "Mailbox",
+            "fieldMappings": [
+              {
+                "identifier": "MailboxPrimaryAddress",
+                "columnName": "AccountUpn"
+              }
+            ]
+          }
+        ],
+        "sentinelEntitiesMappings": null,
+        "templateVersion": null
+      }
+    }
+  ]
 }
