@@ -1,4 +1,4 @@
-name: Convert YAML Detection Rules to JSON
+name: Convert YAML Detection File at Detections Folder to JSON
 
 on:
   push:
@@ -58,5 +58,5 @@ jobs:
       - name: Commit and push JSON files
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto-convert YAML detection rules to JSON"
+          commit_message: "Auto-converted respective YAML detection rule to JSON"
           file_pattern: "**/**/*.json"                                
