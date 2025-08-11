@@ -1,8 +1,8 @@
-name: Convert YAML Detection File at Resources Folder to JSON
+name: Convert YAML Detection File at Resources Folder to JSON # This workflow converts YAML detection files in the Resources folder to JSON format.
 
 on:
   push:
-    paths:
+    paths: # This workflow triggers on changes to YAML files in the Resources folder.
       - 'Resources/*.yml'
       - 'Resources/*.yaml'
   workflow_dispatch:
@@ -56,6 +56,6 @@ jobs:
 
       - name: Commit and push JSON files
         uses: stefanzweifel/git-auto-commit-action@v5
-        with:
+        with: # This step commits and pushes the generated JSON files back to the repository.
           commit_message: "Auto-converted respective YAML detection rule to JSON"
           file_pattern: "**/*.json"                                
