@@ -3,8 +3,6 @@ name: Convert YAML Detection Rules to JSON
 on:
   push:
     paths:
-      - 'Detections/**/*.yml'
-      - 'Detections/**/*.yaml'
       - 'Resources/*.yml'
       - 'Resources/*.yaml'
   workflow_dispatch:
@@ -60,6 +58,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Auto-convert YAML detection rules to JSON"
-          file_pattern: | 
-            **/*.json
-            **/**/*.json                               
+          file_pattern: "**/*.json"                                

@@ -1,0 +1,62 @@
+name: Convert YAML Detection Rules to JSON
+
+on:
+  push:
+    paths:
+      - 'Detections/**/*.yml'
+      - 'Detections/**/*.yaml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  yaml-to-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup tools
+        run: |
+          npm install -g yamljs
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Debug tree
+        run: |
+          echo "Repo tree around Detections:"
+          ls -la
+          find . -maxdepth 3 -type d -name "Detections" -print
+
+      - name: Convert YAML files to JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Collect YAML files from Detections (recursive) and Resources (root only)
+          mapfile -d '' files < <(
+            find ./Detections  -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null
+            find ./Resources -maxdepth 1 -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null
+          )
+
+          echo "Found ${#files[@]} YAML file(s)."
+          if (( ${#files[@]} == 0 )); then
+            echo "Nothing to convert."
+            exit 0
+          fi
+
+          printf 'Converting:\n - %s\n' "${files[@]}"
+          for file in "${files[@]}"; do
+            json_file="${file%.*}.json"
+            mkdir -p "$(dirname "$json_file")"
+            yaml2json "$file" | jq '.' > "$json_file"
+            echo "Wrote: $json_file"
+          done
+
+      - name: Commit and push JSON files
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-convert YAML detection rules to JSON"
+          file_pattern: "**/**/*.json"                                
