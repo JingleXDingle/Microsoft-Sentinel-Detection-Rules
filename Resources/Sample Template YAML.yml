@@ -5,7 +5,7 @@ parameters: # Leave unchanged.
     type: String # Leave unchanged.
 resources:
    # When creating a new rule, you must delete the "id" field completely.
-  - name: "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/SampleValue')]" # Leave empty when creating a new rule replace with the name of your detection rule when updating an existing rule. Avoid names that contain words which can trigger the alert.
+  - name: "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/MyRule')]" # Leave empty when creating a new rule replace with the name of your detection rule when updating an existing rule. Avoid names that contain words which can trigger the alert.
     type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged.
     kind: Scheduled # This must be set to Scheduled for scheduled rules, leave unchanged.
     apiVersion: 2023-12-01-preview # Leave unchanged.
