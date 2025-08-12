@@ -9,7 +9,7 @@
   "resources": [
     {
       "id": "",
-      "name": "",
+      "name": "SampleValue",
       "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
       "kind": "Scheduled",
       "apiVersion": "2023-12-01-preview",
