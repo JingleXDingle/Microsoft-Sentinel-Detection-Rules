@@ -8,8 +8,8 @@
   },
   "resources": [
     {
-      "id": null,
-      "name": null,
+      "id": "",
+      "name": "",
       "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
       "kind": "Scheduled",
       "apiVersion": "2023-12-01-preview",
