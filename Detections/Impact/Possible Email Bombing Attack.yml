@@ -1,0 +1,92 @@
+$schema: https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#  # Leave lines 1 to 8 unchanged
+contentVersion: "1.0.0.0" # Leave unchanged.
+parameters: # Leave unchanged.
+  workspace: # Leave unchanged.
+    type: String # Leave unchanged.
+resources:
+   # When creating a new rule, you must delete the "id" field completely.
+  - name: "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/PossibleEmailBombingAttack')]" # Leave empty when creating a new rule replace with the name of your detection rule when updating an existing rule. Avoid names that contain words which can trigger the alert.
+    type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged.
+    kind: Scheduled # This must be set to Scheduled for scheduled rules, leave unchanged.
+    apiVersion: 2023-12-01-preview # Leave unchanged.
+    properties: #Properties of the detection rule, leave this line unchanged.
+      displayName: Possible Email Bombing Attack # Replace with the name of your detection rule. You must follow proper YAML syntax.
+      description: |
+        Detects potential email bombing attacks against internal mailboxes. 
+        The rule looks for inbound email bursts where a recipient receives 
+        150 or more messages within a 5-minute window. To reduce false positives 
+        from automated systems and bulk senders, known domains are excluded and 
+        the detection requires more than 20 unique sender addresses in that window.
+        Key logic:
+        EmailDirection == "Inbound"
+        Excludes common service domains (e.g., service-now.com, bankunited.com, fiserv.com)
+        Aggregates by RecipientEmailAddress in 5-minute bins
+        Triggers when EmailCount >= 150 and DistinctSenders > 20
+        Projects context fields such as DistinctDomains, SampleDomains, SampleSenders, and SampleSubjects to assist in triage
+        This rule is designed to surface high-confidence signs of email bombing (mass unsolicited messages intended to overwhelm a mailbox).
+      severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
+      enabled: true # Set to true to enable the rule, false to disable
+      query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax. For multiline queries, use the pipe (|) character at the beggining.
+       let threshold = 150;
+        let window    = 5m;
+        EmailEvents
+        | where EmailDirection == "Inbound"
+        | extend SenderDomain = tolower(SenderFromDomain)
+        | where SenderDomain  !in ("service-now.com","bankunited.com","cincnotification.com","derivativeedge.com",
+                        "teams.mail.microsoft.com","fiserv.com","bankunited.coupahost.com",
+                        "sailpointuat.bankunited.com","now.bankunited.com")
+        | summarize
+            EmailCount        = count(),
+            DistinctSenders   = dcount(SenderFromAddress),
+            DistinctDomains   = dcount(SenderDomain),
+            SampleSenders     = make_set(SenderFromAddress, 5),
+            SampleDomains     = make_set(SenderDomain, 5),
+            SampleSubjects    = make_set(Subject, 5)
+          by RecipientEmailAddress, bin(TimeGenerated, window)
+        | where EmailCount >= threshold
+            and DistinctSenders > 20
+        | project
+            TimeGenerated,
+            RecipientEmailAddress,
+            EmailCount,
+            DistinctSenders,
+            DistinctDomains,
+            SampleDomains,
+            SampleSenders,
+            SampleSubjects
+        | order by EmailCount desc
+      queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
+      queryPeriod: PT5M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
+      triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
+      triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0 when using GreaterThan.
+      suppressionDuration: PT5H # Replace with how long to suppress duplicate alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
+      suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false.
+      startTimeUtc: null # Leave unchanged
+      tactics: # Include the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
+        - Impact
+      techniques: # Include the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
+        - T1667
+      subTechniques: # Include the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
+      alertRuleTemplateName: null # Leave unchanged unless you are using a template.
+      incidentConfiguration:
+        createIncident: true # Set to true to create an incident when this rule triggers, false to only create alerts, usually true.
+        groupingConfiguration:
+          enabled: true # Set to true to enable grouping of alerts into incidents, false to disable, usually true.
+          reopenClosedIncident: false # Set to true to reopen closed incidents when new alerts match, false to keep them closed, usually false.
+          lookbackDuration: PT5H # Replace with how far back to look for matching alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
+          matchingMethod: AllEntities # Determines how many entities must match to group alerts, valid values are AllEntities or AnyEntity, usually AllEntities for more precise grouping.
+          groupByEntities: [] # Replace with a list of entity types to group by, e.g. ["Account", "Host"], or leave empty to not group by entities.
+          groupByAlertDetails: [] # Replace with a list of alert detail fields to group by, or leave empty to not group by alert details.
+          groupByCustomDetails: [] # Replace with a list of custom detail fields to group by, or leave empty to not group by custom details.
+      eventGroupingSettings:
+        aggregationKind: SingleAlert # Leave unchanged, valid values are SingleAlert or AlertPerResult, usually SingleAlert.
+      alertDetailsOverride:
+        alertDynamicProperties: [] # Leave unchanged unless you want to add dynamic properties to the alert.
+      customDetails: {}
+      entityMappings: # Replace with mappings from query result columns to entity types, see https://learn.microsoft.com/en-us/azure/sentinel/create-custom-entity-mapping
+        - entityType: Mailbox
+          fieldMappings:
+            - identifier: MailboxPrimaryAddress
+              columnName: RecipientEmailAddress
+      sentinelEntitiesMappings: null # Leave unchanged unless you are using Sentinel entity mappings.
+      templateVersion: null # Leave unchanged unless you are using a specific template.
