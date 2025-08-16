@@ -64,9 +64,8 @@ resources:
       startTimeUtc: null # Leave unchanged
       tactics: # Include the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
         - Impact
-      techniques: # Include the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
-        - T1667
-      subTechniques: # Include the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
+      techniques: # No available Mitre Technique on Sentinel
+      subTechniques: # No available Mitre subTechnique on Sentinel
       alertRuleTemplateName: null # Leave unchanged unless you are using a template.
       incidentConfiguration:
         createIncident: true # Set to true to create an incident when this rule triggers, false to only create alerts, usually true.
