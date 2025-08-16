@@ -28,9 +28,7 @@
         "tactics": [
           "Impact"
         ],
-        "techniques": [
-          "T1667"
-        ],
+        "techniques": null,
         "subTechniques": null,
         "alertRuleTemplateName": null,
         "incidentConfiguration": {
