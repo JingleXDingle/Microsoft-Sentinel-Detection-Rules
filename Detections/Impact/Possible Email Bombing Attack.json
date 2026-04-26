@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspace": {
+      "type": "String"
+    }
+  },
+  "resources": [
+    {
+      "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/PossibleEmailBombingAttack')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "kind": "Scheduled",
+      "apiVersion": "2023-12-01-preview",
+      "properties": {
+        "displayName": "Possible Email Bombing Attack",
+        "description": "Detects potential email bombing attacks against internal mailboxes. \nThe rule looks for inbound email bursts where a recipient receives \n150 or more messages within a 5-minute window. To reduce false positives \nfrom automated systems and bulk senders, known domains are excluded and \nthe detection requires more than 20 unique sender addresses in that window.\nKey logic:\nEmailDirection == \"Inbound\"\nExcludes common service domains (e.g., service-now.com, teams.mail.microsoft.com)\nAggregates by RecipientEmailAddress in 5-minute bins\nTriggers when EmailCount >= 150 and DistinctSenders > 20\nProjects context fields such as DistinctDomains, SampleDomains, SampleSenders, and SampleSubjects to assist in triage\nThis rule is designed to surface high-confidence signs of email bombing (mass unsolicited messages intended to overwhelm a mailbox).\n",
+        "severity": "Low",
+        "enabled": true,
+        "query": "let threshold = 150;\n let window    = 5m;\n EmailEvents\n | where EmailDirection == \"Inbound\"\n | extend SenderDomain = tolower(SenderFromDomain)\n | where SenderDomain  !in (\"service-now.com\",\"teams.mail.microsoft.com\"\n                 // Add any additional trusted/bulk-sender domains to exclude here\n                 )\n | summarize\n     EmailCount        = count(),\n     DistinctSenders   = dcount(SenderFromAddress),\n     DistinctDomains   = dcount(SenderDomain),\n     SampleSenders     = make_set(SenderFromAddress, 5),\n     SampleDomains     = make_set(SenderDomain, 5),\n     SampleSubjects    = make_set(Subject, 5)\n   by RecipientEmailAddress, bin(TimeGenerated, window)\n | where EmailCount >= threshold\n     and DistinctSenders > 20\n | project\n     TimeGenerated,\n     RecipientEmailAddress,\n     EmailCount,\n     DistinctSenders,\n     DistinctDomains,\n     SampleDomains,\n     SampleSenders,\n     SampleSubjects\n | order by EmailCount desc\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT5M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "suppressionDuration": "PT5H",
+        "suppressionEnabled": false,
+        "startTimeUtc": null,
+        "tactics": [
+          "Impact"
+        ],
+        "techniques": null,
+        "subTechniques": null,
+        "alertRuleTemplateName": null,
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        },
+        "customDetails": {},
+        "entityMappings": [
+          {
+            "entityType": "Mailbox",
+            "fieldMappings": [
+              {
+                "identifier": "MailboxPrimaryAddress",
+                "columnName": "RecipientEmailAddress"
+              }
+            ]
+          }
+        ],
+        "sentinelEntitiesMappings": null,
+        "templateVersion": null
+      }
+    }
+  ]
+}

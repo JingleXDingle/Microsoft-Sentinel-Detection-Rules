@@ -4,33 +4,30 @@ parameters: # Leave unchanged.
   workspace: # Leave unchanged.
     type: String # Leave unchanged.
 resources:
-   # When creating a new rule, you must remove the "id" field completely. This is so Sentinel automatically assigns a new ID. When updating a rule, you must copy the entire "id" field from the existing rule and add a - symbol before it.
-  - name: "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/SampleValue')]" # Change "SampleValue" to a unique name for your detection rule. When updating a rule, you must copy the entire "name" field from the existing rule and remove the - symbol before it.
+  - id: "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/ca9625d3-2e63-4e3a-aa06-35c0ae3c8457')]"   # Leave empty when creating a new rule, replace with full resource ID when updating an existing rule.
+    name: "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/ca9625d3-2e63-4e3a-aa06-35c0ae3c8457')]" # Leave empty when creating a new rule replace with the name of your detection rule when updating an existing rule.
     type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged.
     kind: Scheduled # This must be set to Scheduled for scheduled rules, leave unchanged.
     apiVersion: 2023-12-01-preview # Leave unchanged.
     properties: #Properties of the detection rule, leave this line unchanged.
-      displayName: SampleValue # Replace with the name of your detection rule. You must follow proper YAML syntax.
-      description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
-      severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
+      displayName: "Registry Persistence via MicRun: Potential DeedRAT Activity" # Replace with the name of your detection rule. You must follow proper YAML syntax.
+      description: | # Replace with the description of your detection rule, you must follow proper YAML syntax.
+        This detection monitors for the creation of the following registry key entry:
+        HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\MicRun
+        This specific registry entry has been observed in recent DeedRAT backdoor campaigns, where threat actors establish persistence by configuring MicRun.exe to execute at user logon. 
+        The Run key is a common Windows autostart mechanism abused by malware to ensure continued execution across reboots without requiring elevated privileges.
+        Creation of this registry key may indicate the presence of DeedRAT or similar loader activity. 
+        Security teams should review the initiating process and associated command line to determine if this is malicious or part of authorized software behavior.
+
+        References: DeedRAT Analysis: Lab52: https://lab52.io/blog/deedrat-backdoor-enhanced-by-chinese-apts-with-advanced-capabilities/ 
+      severity: Medium # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
       enabled: true # Set to true to enable the rule, false to disable
       query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax. For multiline queries, use the pipe (|) character at the beggining.
-       DeviceProcessEvents
-       | where tolower(FileName) == "micrun.exe"
-       or tolower(ProcessCommandLine) has "micrun.exe"
-       or SHA1 has "e356dbd3bd62c19fa3ff8943fc73a4fab01a6446f989318b7da4abf48d565af2"
-       | project //Dictates the columns that will be displayed by the query.
-       TimeGenerated,
-       ActionType,
-       DeviceName,
-       AccountName,
-       AccountUpn,
-       InitiatingProcessFileName,
-       ProcessCommandLine,
-       FileName,
-       SHA1,
-       FolderPath
-       | sort by TimeGenerated desc //Sorts by showing the most recent events first.
+       DeviceRegistryEvents
+       | where ActionType == 'RegistryKeyCreated'
+       | where RegistryKey =~ 'HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\MicRun'
+       | project TimeGenerated, ActionType, DeviceName, RegistryKey, InitiatingProcessCommandLine, InitiatingProcessFileName, InitiatingProcessFolderPath
+       | sort by TimeGenerated desc
       queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
       queryPeriod: PT5M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
       triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
@@ -39,14 +36,11 @@ resources:
       suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false.
       startTimeUtc: null # Leave unchanged
       tactics: # Include the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
-        - Execution
+        - Persistence
       techniques: # Include the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
-        - T0863
-        - T1053
-        - T1204
+        - T1547       
       subTechniques: # Include the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
-        - T1053.005
-        - T1204.002
+        - T1547.001
       alertRuleTemplateName: null # Leave unchanged unless you are using a template.
       incidentConfiguration:
         createIncident: true # Set to true to create an incident when this rule triggers, false to only create alerts, usually true.
@@ -72,17 +66,9 @@ resources:
           fieldMappings:
             - identifier: HostName
               columnName: DeviceName
-        - entityType: File
+        - entityType: RegistryKey
           fieldMappings:
-            - identifier: Name
-              columnName: FileName
-        - entityType: FileHash
-          fieldMappings:
-            - identifier: Value
-              columnName: SHA1
-        - entityType: Mailbox
-          fieldMappings:
-            - identifier: MailboxPrimaryAddress
-              columnName: AccountUpn
+            - identifier: Key
+              columnName: RegistryKey
       sentinelEntitiesMappings: null # Leave unchanged unless you are using Sentinel entity mappings.
       templateVersion: null # Leave unchanged unless you are using a specific template.

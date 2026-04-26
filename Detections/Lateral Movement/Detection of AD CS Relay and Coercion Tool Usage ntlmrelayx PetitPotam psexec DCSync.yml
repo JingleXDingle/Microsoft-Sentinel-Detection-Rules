@@ -4,33 +4,38 @@ parameters: # Leave unchanged.
   workspace: # Leave unchanged.
     type: String # Leave unchanged.
 resources:
-   # When creating a new rule, you must remove the "id" field completely. This is so Sentinel automatically assigns a new ID. When updating a rule, you must copy the entire "id" field from the existing rule and add a - symbol before it.
-  - name: "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/SampleValue')]" # Change "SampleValue" to a unique name for your detection rule. When updating a rule, you must copy the entire "name" field from the existing rule and remove the - symbol before it.
+  - id: "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/6894170c-2ef4-4819-acf0-de76db4051fa')]"   # Leave empty when creating a new rule, replace with full resource ID when updating an existing rule.
+    name: "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/6894170c-2ef4-4819-acf0-de76db4051fa')]" # Leave empty when creating a new rule replace with the name of your detection rule when updating an existing rule. Avoid names that contain words which can trigger the alert.
     type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged.
     kind: Scheduled # This must be set to Scheduled for scheduled rules, leave unchanged.
     apiVersion: 2023-12-01-preview # Leave unchanged.
     properties: #Properties of the detection rule, leave this line unchanged.
-      displayName: SampleValue # Replace with the name of your detection rule. You must follow proper YAML syntax.
-      description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
-      severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
+      displayName: "Detection of AD CS Relay and Coercion Tool Usage (ntlmrelayx, PetitPotam, psexec, DCSync)" # Replace with the name of your detection rule. You must follow proper YAML syntax.
+      description: "This rule identifies the execution of tools and command-line patterns commonly used in Active Directory Certificate Services (AD CS) relay and coercion attacks. It monitors for known utilities such as ntlmrelayx.py, PetitPotam, and psexec.py, which are often used in NTLM relay scenarios or lateral movement. The rule also inspects for suspicious command-line arguments, including certificate enrollment requests via HTTP (/certsrv/), pass-the-hash options, and DCSync operations used to extract credentials from domain controllers. These behaviors are indicative of techniques such as ESC8 abuse, NTLM authentication relays, and privilege escalation via certificate-based access. Refer to the following article for more details: https://www.hackingarticles.in/domain-escalation-petitpotam-ntlm-relay-to-adcs-endpoints/" # Replace with the description of your detection rule, you must follow proper YAML syntax.
+      severity: High # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
       enabled: true # Set to true to enable the rule, false to disable
       query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax. For multiline queries, use the pipe (|) character at the beggining.
-       DeviceProcessEvents
-       | where tolower(FileName) == "micrun.exe"
-       or tolower(ProcessCommandLine) has "micrun.exe"
-       or SHA1 has "e356dbd3bd62c19fa3ff8943fc73a4fab01a6446f989318b7da4abf48d565af2"
-       | project //Dictates the columns that will be displayed by the query.
-       TimeGenerated,
-       ActionType,
-       DeviceName,
-       AccountName,
-       AccountUpn,
-       InitiatingProcessFileName,
-       ProcessCommandLine,
-       FileName,
-       SHA1,
-       FolderPath
-       | sort by TimeGenerated desc //Sorts by showing the most recent events first.
+       // Define tool names used in common relay/coercion/lateral movement
+       let toolIdentifiers = dynamic([
+       "ntlmrelayx.py",
+       "PetitPotam.py",
+       "PetitPotam.exe",
+       "psexec.py"
+       ]);
+       // Define malicious or suspicious command-line patterns for those tools
+       let attackCommands = dynamic([
+        "ntlmrelayx.py -t",
+        "ntlmrelayx.py -t http:",
+        "PetitPotam.py -d bkuna",
+        "PetitPotam.exe -d bkuna",
+        "lsadump::dcsync /domain:",
+        "psexec.py -hashes"
+        ]);
+        DeviceProcessEvents
+        | where ProcessCommandLine has_any (toolIdentifiers)
+          or ProcessCommandLine has_any (attackCommands)
+        | project TimeGenerated, AccountDomain, AccountName, DeviceName, AccountUpn, ProcessCommandLine, SHA256, FileName, InitiatingProcessFileName, InitiatingProcessCommandLine
+        | sort by TimeGenerated desc     
       queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
       queryPeriod: PT5M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
       triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
@@ -39,14 +44,11 @@ resources:
       suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false.
       startTimeUtc: null # Leave unchanged
       tactics: # Include the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
-        - Execution
+        - "CredentialAccess"
+        - "LateralMovement"
       techniques: # Include the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
-        - T0863
-        - T1053
-        - T1204
+        - "T1649"
       subTechniques: # Include the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
-        - T1053.005
-        - T1204.002
       alertRuleTemplateName: null # Leave unchanged unless you are using a template.
       incidentConfiguration:
         createIncident: true # Set to true to create an incident when this rule triggers, false to only create alerts, usually true.
@@ -79,7 +81,11 @@ resources:
         - entityType: FileHash
           fieldMappings:
             - identifier: Value
-              columnName: SHA1
+              columnName: SHA256
+        - entityType: Process
+          fieldMappings:
+            - identifier: CommandLine
+              columnName: ProcessCommandLine
         - entityType: Mailbox
           fieldMappings:
             - identifier: MailboxPrimaryAddress
