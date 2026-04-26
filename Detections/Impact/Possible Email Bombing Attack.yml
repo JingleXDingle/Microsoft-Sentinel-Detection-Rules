@@ -19,7 +19,7 @@ resources:
         the detection requires more than 20 unique sender addresses in that window.
         Key logic:
         EmailDirection == "Inbound"
-        Excludes common service domains (e.g., service-now.com, bankunited.com, fiserv.com)
+        Excludes common service domains (e.g., service-now.com, teams.mail.microsoft.com)
         Aggregates by RecipientEmailAddress in 5-minute bins
         Triggers when EmailCount >= 150 and DistinctSenders > 20
         Projects context fields such as DistinctDomains, SampleDomains, SampleSenders, and SampleSubjects to assist in triage
@@ -32,9 +32,9 @@ resources:
         EmailEvents
         | where EmailDirection == "Inbound"
         | extend SenderDomain = tolower(SenderFromDomain)
-        | where SenderDomain  !in ("service-now.com","bankunited.com","cincnotification.com","derivativeedge.com",
-                        "teams.mail.microsoft.com","fiserv.com","bankunited.coupahost.com",
-                        "sailpointuat.bankunited.com","now.bankunited.com")
+        | where SenderDomain  !in ("service-now.com","teams.mail.microsoft.com"
+                        // Add any additional trusted/bulk-sender domains to exclude here
+                        )
         | summarize
             EmailCount        = count(),
             DistinctSenders   = dcount(SenderFromAddress),
