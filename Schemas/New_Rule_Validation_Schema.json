@@ -4,26 +4,50 @@
 "$schema": "http://json-schema.org/draft-07/schema#",
 "$id": "https://example.com/schemas/sentinel-detection.schema.json",
 "type": "object",
-"additionalProperties": false,
+"additionalProperties": true,
 
 
 "properties": {
     "id": {
-    "description": "Stable unique identifier of the rule (UUID).",
-    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
-
+      "description": "Stable unique identifier of the rule (UUID).",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "type": "string"
+    },
     "name": {
       "description": "Name of the rule.",
       "type": "string",
       "minLength": 3,
       "maxLength": 128
     },
+    "kind": {
+      "description": "The kind of the rule, which determines the type of analytics rule to be created in Microsoft Sentinel.",
+      "const": "Scheduled"
+    },
+    "apiVersion": {
+      "description": "The API version to be used when deploying the rule to Microsoft Sentinel.",
+      "const": "2023-12-01-preview"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["Informational", "Low", "Medium", "High"]
+    },
+    "enabled": {
+      "const": true
+    },
+    "query": {
+      "type": "string",
+      "minLength": 10
+    }
 
-    "resource_type": { 
-      "description":  "The type of rule, this value should never change.",
-      "type": "const", 
-      "value": "Microsoft.OperationalInsights/workspaces/providers/alertRules"
-}
 
 
 
@@ -40,10 +64,6 @@
 
 
 
-
-
-
-}
     
 }
 }
