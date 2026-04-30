@@ -26,8 +26,8 @@ resources:
        let attackCommands = dynamic([
         "ntlmrelayx.py -t",
         "ntlmrelayx.py -t http:",
-        "PetitPotam.py -d bkuna",
-        "PetitPotam.exe -d bkuna",
+        "PetitPotam.py -d your-domain-name",
+        "PetitPotam.exe -d your-domain-name",
         "lsadump::dcsync /domain:",
         "psexec.py -hashes"
         ]);
