@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/sentinel-detection.schema.json",
+  "title": "Microsoft Sentinel Detection (Scheduled Analytics Rule) - DaC",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "displayName",
+    "description",
+    "severity",
+    "tactics",
+    "query",
+    "queryFrequency",
+    "queryPeriod",
+    "triggerOperator",
+    "triggerThreshold",
+    "enabled",
+    "version"
+  ],
+
+  "properties": {
+    "id": {
+      "description": "Stable unique identifier of the rule (UUID).",
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+
+    "displayName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128
+    },
+
+    "description": {
+      "type": "string",
+      "minLength": 10
+    },
+
+    "severity": {
+      "type": "string",
+      "enum": ["Informational", "Low", "Medium", "High"]
+    },
+
+    "status": {
+      "description": "Lifecycle of the detection.",
+      "type": "string",
+      "enum": ["Production", "Preview", "Deprecated"]
+    },
+
+    "tactics": {
+      "description": "MITRE ATT&CK tactics.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Reconnaissance",
+          "Resource Development",
+          "Initial Access",
+          "Execution",
+          "Persistence",
+          "Privilege Escalation",
+          "Defense Evasion",
+          "Credential Access",
+          "Discovery",
+          "Lateral Movement",
+          "Collection",
+          "Command and Control",
+          "Exfiltration",
+          "Impact"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+
+    "techniques": {
+      "description": "ATT&CK technique or sub-technique IDs (e.g., T1059 or T1059.003).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^T\\d{4}(?:\\.\\d{3})?$"
+      },
+      "uniqueItems": true
+    },
+
+    "query": {
+      "description": "KQL query.",
+      "type": "string",
+      "minLength": 1
+    },
+
+    "queryFrequency": {
+      "description": "How often the query runs. ISO-8601 duration (e.g., PT5M, PT1H).",
+      "type": "string",
+      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+    },
+
+    "queryPeriod": {
+      "description": "Lookback window. ISO-8601 duration (must be >= queryFrequency in practice).",
+      "type": "string",
+      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+    },
+
+    "triggerOperator": {
+      "type": "string",
+      "enum": ["GreaterThan", "LessThan", "Equal", "NotEqual"]
+    },
+
+    "triggerThreshold": {
+      "type": "integer",
+      "minimum": 0
+    },
+
+    "eventGrouping": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aggregationKind": {
+          "type": "string",
+          "enum": ["SingleAlert", "AlertPerResult"]
+        }
+      }
+    },
+
+    "suppressionEnabled": { "type": "boolean" },
+
+    "suppressionDuration": {
+      "description": "ISO-8601 duration (e.g., PT1H) while suppression is active.",
+      "type": "string",
+      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+    },
+
+    "entityMappings": {
+      "description": "Maps KQL columns to Sentinel entities.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entityType", "fieldMappings"],
+        "properties": {
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "Account",
+              "AzureResource",
+              "CloudApplication",
+              "DNS",
+              "File",
+              "FileHash",
+              "Host",
+              "IP",
+              "MailCluster",
+              "Mailbox",
+              "MailMessage",
+              "Malware",
+              "Process",
+              "RegistryKey",
+              "RegistryValue",
+              "SecurityGroup",
+              "SubmissionMail",
+              "URL"
+            ]
+          },
+          "fieldMappings": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["identifier", "columnName"],
+              "properties": {
+                "identifier": { "type": "string", "minLength": 1 },
+                "columnName": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "customDetails": {
+      "description": "Extra name/value pairs to surface on the alert.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+
+    "tags": {
+      "description": "Freeform tags (team, datasource, MITRE links, etc.).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "pattern": "^[A-Za-z0-9 _.-]+$"
+      },
+      "uniqueItems": true
+    },
+
+    "references": {
+      "description": "External references such as blogs, reports, or internal wiki links.",
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "uniqueItems": true
+    },
+
+    "enabled": { "type": "boolean" },
+
+    "version": {
+      "description": "Detection rule semver or integer; using integer here for simplicity.",
+      "type": "integer",
+      "minimum": 1
+    },
+
+    "author": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "email": { "type": "string", "format": "email" },
+        "organization": { "type": "string" }
+      }
+    },
+
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+
+  "allOf": [
+    {
+      "if": { "properties": { "suppressionEnabled": { "const": true } }, "required": ["suppressionEnabled"] },
+      "then": { "required": ["suppressionDuration"] }
+    }
+  ]
+}

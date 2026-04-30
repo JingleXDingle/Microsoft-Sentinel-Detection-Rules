@@ -1,0 +1,88 @@
+$schema: https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#  # Leave lines 1 to 8 unchanged
+contentVersion: "1.0.0.0" # Leave unchanged.
+parameters: # Leave unchanged.
+  workspace: # Leave unchanged.
+    type: String # Leave unchanged.
+resources:
+   # When creating a new rule, you must remove the "id" field completely. This is so Sentinel automatically assigns a new ID. When updating a rule, you must copy the entire "id" field from the existing rule and add a - symbol before it.
+  - name: "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/SampleValue')]" # Change "SampleValue" to a unique name for your detection rule. When updating a rule, you must copy the entire "name" field from the existing rule and remove the - symbol before it.
+    type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged.
+    kind: Scheduled # This must be set to Scheduled for scheduled rules, leave unchanged.
+    apiVersion: 2023-12-01-preview # Leave unchanged.
+    properties: #Properties of the detection rule, leave this line unchanged.
+      displayName: SampleValue # Replace with the name of your detection rule. You must follow proper YAML syntax.
+      description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
+      severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
+      enabled: true # Set to true to enable the rule, false to disable
+      query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax. For multiline queries, use the pipe (|) character at the beggining.
+       DeviceProcessEvents
+       | where tolower(FileName) == "micrun.exe"
+       or tolower(ProcessCommandLine) has "micrun.exe"
+       or SHA1 has "e356dbd3bd62c19fa3ff8943fc73a4fab01a6446f989318b7da4abf48d565af2"
+       | project //Dictates the columns that will be displayed by the query.
+       TimeGenerated,
+       ActionType,
+       DeviceName,
+       AccountName,
+       AccountUpn,
+       InitiatingProcessFileName,
+       ProcessCommandLine,
+       FileName,
+       SHA1,
+       FolderPath
+       | sort by TimeGenerated desc //Sorts by showing the most recent events first.
+      queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
+      queryPeriod: PT5M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
+      triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
+      triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0 when using GreaterThan.
+      suppressionDuration: PT5H # Replace with how long to suppress duplicate alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
+      suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false.
+      startTimeUtc: null # Leave unchanged
+      tactics: # Include the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
+        - Execution
+      techniques: # Include the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
+        - T0863
+        - T1053
+        - T1204
+      subTechniques: # Include the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
+        - T1053.005
+        - T1204.002
+      alertRuleTemplateName: null # Leave unchanged unless you are using a template.
+      incidentConfiguration:
+        createIncident: true # Set to true to create an incident when this rule triggers, false to only create alerts, usually true.
+        groupingConfiguration:
+          enabled: true # Set to true to enable grouping of alerts into incidents, false to disable, usually true.
+          reopenClosedIncident: false # Set to true to reopen closed incidents when new alerts match, false to keep them closed, usually false.
+          lookbackDuration: PT5H # Replace with how far back to look for matching alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
+          matchingMethod: AllEntities # Determines how many entities must match to group alerts, valid values are AllEntities or AnyEntity, usually AllEntities for more precise grouping.
+          groupByEntities: [] # Replace with a list of entity types to group by, e.g. ["Account", "Host"], or leave empty to not group by entities.
+          groupByAlertDetails: [] # Replace with a list of alert detail fields to group by, or leave empty to not group by alert details.
+          groupByCustomDetails: [] # Replace with a list of custom detail fields to group by, or leave empty to not group by custom details.
+      eventGroupingSettings:
+        aggregationKind: SingleAlert # Leave unchanged, valid values are SingleAlert or AlertPerResult, usually SingleAlert.
+      alertDetailsOverride:
+        alertDynamicProperties: [] # Leave unchanged unless you want to add dynamic properties to the alert.
+      customDetails: {}
+      entityMappings: # Replace with mappings from query result columns to entity types, see https://learn.microsoft.com/en-us/azure/sentinel/create-custom-entity-mapping
+        - entityType: Account # Replace with the entity type, e.g. Account, Host, File, FileHash, Mailbox, etc.
+          fieldMappings:
+            - identifier: Name # Replace with the entity field identifier, e.g. Name for Account, HostName for Host, etc.
+              columnName: AccountName # Replace with the name of the column in your query results that contains this information. 
+        - entityType: Host
+          fieldMappings:
+            - identifier: HostName
+              columnName: DeviceName
+        - entityType: File
+          fieldMappings:
+            - identifier: Name
+              columnName: FileName
+        - entityType: FileHash
+          fieldMappings:
+            - identifier: Value
+              columnName: SHA1
+        - entityType: Mailbox
+          fieldMappings:
+            - identifier: MailboxPrimaryAddress
+              columnName: AccountUpn
+      sentinelEntitiesMappings: null # Leave unchanged unless you are using Sentinel entity mappings.
+      templateVersion: null # Leave unchanged unless you are using a specific template.
