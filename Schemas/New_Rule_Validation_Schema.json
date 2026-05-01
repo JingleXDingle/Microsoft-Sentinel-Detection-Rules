@@ -59,7 +59,7 @@
                     "properties": {
                         "description": "The actual detection rule logic.",
                         "type": "object",
-                        "additionalProperties": false,
+                        "additionalProperties": true,
                         "required": ["displayName", "description", "severity", "enabled", "query", "queryFrequency", "queryPeriod", "triggerOperator", "triggerThreshold"],
                         "properties": {
                             "displayName": {
