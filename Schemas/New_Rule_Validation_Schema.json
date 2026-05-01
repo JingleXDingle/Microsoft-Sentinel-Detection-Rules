@@ -29,7 +29,7 @@
             "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["id", "name", "type", "kind", "apiVersion", "properties"],
+                "required": ["name", "type", "kind", "apiVersion", "properties"],
                 "properties": {
                     "id": {
                         "description": "Full ARM resource ID expression. Usually built with concat() and resourceId().",
