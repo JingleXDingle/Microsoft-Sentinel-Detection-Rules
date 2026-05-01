@@ -5,7 +5,11 @@
     "description": "Validates Sentinel scheduled analytics rules in ARM template YAML format ensuring they are ready to be transformed into JSON and deployed in Microsoft Sentinel.",
     "type": "object",
     "additionalProperties": true,
-    "required": ["$schema", "contentVersion", "resources"],
+    "required": [
+        "$schema",
+        "contentVersion",
+        "resources"
+    ],
     "properties": {
         "$schema": {
             "description": "ARM deployment template schema URL.",
@@ -29,7 +33,13 @@
             "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["name", "type", "kind", "apiVersion", "properties"],
+                "required": [
+                    "name",
+                    "type",
+                    "kind",
+                    "apiVersion",
+                    "properties"
+                ],
                 "properties": {
                     "id": {
                         "description": "Full ARM resource ID expression. Usually built with concat() and resourceId().",
@@ -60,7 +70,17 @@
                         "description": "The actual detection rule logic.",
                         "type": "object",
                         "additionalProperties": true,
-                        "required": ["displayName", "description", "severity", "enabled", "query", "queryFrequency", "queryPeriod", "triggerOperator", "triggerThreshold"],
+                        "required": [
+                            "displayName",
+                            "description",
+                            "severity",
+                            "enabled",
+                            "query",
+                            "queryFrequency",
+                            "queryPeriod",
+                            "triggerOperator",
+                            "triggerThreshold"
+                        ],
                         "properties": {
                             "displayName": {
                                 "description": "Human-readable display name of the rule.",
@@ -76,7 +96,12 @@
                             "severity": {
                                 "description": "Severity of alerts produced by this rule.",
                                 "type": "string",
-                                "enum": ["Informational", "Low", "Medium", "High"]
+                                "enum": [
+                                    "Informational",
+                                    "Low",
+                                    "Medium",
+                                    "High"
+                                ]
                             },
                             "enabled": {
                                 "description": "Whether the rule is enabled at deploy time.",
@@ -101,7 +126,12 @@
                             "triggerOperator": {
                                 "description": "The operator used to compare the query results against the trigger threshold.",
                                 "type": "string",
-                                "enum": ["GreaterThan", "LessThan", "Equal", "NotEqual"]
+                                "enum": [
+                                    "GreaterThan",
+                                    "LessThan",
+                                    "Equal",
+                                    "NotEqual"
+                                ]
                             },
                             "triggerThreshold": {
                                 "description": "The threshold value that determines when an alert is generated based on the query results.",
@@ -119,14 +149,135 @@
                             },
                             "startTimeUtc": {
                                 "description": "The UTC time when the rule should start being active. ISO-8601 format (e.g., 2024-01-01T00:00:00Z).",
-                                "type": ["string", "null"],
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
                                 "format": "date-time"
                             },
                             "tactics": {
                                 "description": "MITRE ATT&CK tactics associated with the rule.",
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "enum": [
+                                        "Reconnaissance",
+                                        "ResourceDevelopment",
+                                        "InitialAccess",
+                                        "Execution",
+                                        "Persistence",
+                                        "PrivilegeEscalation",
+                                        "DefenseEvasion",
+                                        "CredentialAccess",
+                                        "Discovery",
+                                        "LateralMovement",
+                                        "Collection",
+                                        "CommandAndControl",
+                                        "Exfiltration",
+                                        "Impact"
+                                    ]
+                                }
+                            },
+                            "techniques": {
+                                "description": "MITRE ATT&CK techniques associated with the rule.",
+                                "type": ["array", "null"],
+                                "items": {
+                                    "type": "string",
+                                    "pattern": "^T\\d{4}$"
+                                }
+                            },
+                            "subTechniques": {
+                                "description": "MITRE ATT&CK sub-techniques associated with the rule.",
+                                "type": ["array", "null"],
+                                "items": {
+                                    "type": "string",
+                                    "pattern": "^T\\d{4}\\.\\d{2}$"
+                                }
+                            },
+                            "alertRuleTemplateName": {
+                                "description": "The name of the alert rule template to use when creating this rule. If null, no template will be used.",
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "minLength": 3
+                            },
+                            "incidentConfiguration": {
+                                "description": "Configuration for how incidents should be created and grouped from alerts generated by this rule.",
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "createIncident",
+                                    "groupingConfiguration"
+                                ],
+                                "properties": {
+                                    "createIncident": {
+                                        "description": "Whether an incident should be created when an alert is generated by this rule.",
+                                        "type": "boolean"
+                                    },
+                                    "groupingConfiguration": {
+                                        "description": "Configuration for how alerts should be grouped into incidents.",
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                            "enabled",
+                                            "reopenClosedIncident",
+                                            "lookbackDuration",
+                                            "matchingMethod",
+                                            "groupByEntities",
+                                            "groupByAlertDetails",
+                                            "groupByCustomDetails"
+                                        ],
+                                        "properties": {
+                                            "enabled": {
+                                                "description": "Whether alert grouping into incidents is enabled.",
+                                                "type": "boolean"
+                                            },
+                                            "reopenClosedIncident": {
+                                                "description": "Whether to reopen a closed incident if a new alert matches it.",
+                                                "type": "boolean"
+                                            },
+                                            "lookbackDuration": {
+                                                "description": "The time range to look back on when determining if a new alert matches an existing incident. ISO-8601 duration (e.g., PT5H).",
+                                                "type": "string",
+                                                "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+                                            },
+                                            "matchingMethod": {
+                                                "description": "The method used to determine if a new alert matches an existing incident.",
+                                                "type": "string",
+                                                "enum": [
+                                                    "AllEntities",
+                                                    "AnyEntity",
+                                                    "AlertDetails",
+                                                    "CustomDetails"
+                                                ]
+                                            },
+                                            "groupByEntities": {
+                                                "description": "The list of entity types and fields to use when grouping alerts into incidents based on entities. Required if matchingMethod is AllEntities or AnyEntity.",
+                                                "type": [
+                                                    "array",
+                                                    "null"
+                                                ],
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "groupByAlertDetails": {
+                                                "description": "The list of alert detail fields to use when grouping alerts into incidents based on alert details. Required if matchingMethod is AlertDetails.",
+                                                "type": [
+                                                    "array",
+                                                    "null"
+                                                ]
+                                            },
+                                            "groupByCustomDetails": {
+                                                "description": "The list of custom detail fields to use when grouping alerts into incidents based on custom details. Required if matchingMethod is CustomDetails.",
+                                                "type": [
+                                                    "array",
+                                                    "null"
+                                                ]
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
