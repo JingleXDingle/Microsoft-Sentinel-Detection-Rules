@@ -1,109 +1,138 @@
 {
-"Title": "Rule Validation Schema",
-"Description": "This schema defines the structure for validating rules written in YAML format ensuring they are ready to be transformed into ARM json format and deployed in Microsoft Sentinel.",
-"$schema": "http://json-schema.org/draft-07/schema#",
-"$id": "https://example.com/schemas/sentinel-detection.schema.json",
-"type": "object",
-"additionalProperties": false,
-
-
-"properties": {
-    "id": {
-      "description": "Stable unique identifier of the rule (UUID).",
-      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
-      "type": "string"
-    },
-    "name": {
-      "description": "Name of the rule.",
-      "type": "string",
-      "minLength": 3,
-      "maxLength": 128
-    },
-    "kind": {
-      "description": "The kind of the rule, which determines the type of analytics rule to be created in Microsoft Sentinel.",
-      "const": "Scheduled"
-    },
-    "apiVersion": {
-      "description": "The API version to be used when deploying the rule to Microsoft Sentinel.",
-      "const": "2023-12-01-preview"
-    },
-    "displayName": {
-      "type": "string",
-      "minLength": 3,
-      "maxLength": 128
-    },
-    "description": {
-      "type": "string",
-      "minLength": 10
-    },
-    "severity": {
-      "type": "string",
-      "enum": ["Informational", "Low", "Medium", "High"]
-    },
-    "enabled": {
-      "const": true
-    }, 
-    "query": {
-      "type": "string",
-      "minLength": 10
-    },
-    "queryFrequency": {
-      "description": "How often the query runs. ISO-8601 duration (e.g., PT5M, PT1H).",
-      "type": "string",
-      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
-    },
-    "queryPeriod": {
-      "description": "The time range the query looks back on when it runs. ISO-8601 duration (e.g., PT5M, PT1H).",
-      "type": "string",
-      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
-    },
-    "triggerOperator": {
-      "description": "The operator used to compare the query results against the trigger threshold.",
-      "type": "string",
-      "enum": ["GreaterThan", "LessThan", "Equal"]
-    },
-    "triggerThreshold": {
-      "description": "The threshold value that determines when an alert is generated based on the query results.",
-      "type": "number",
-      "minimum": 0
-    },
-    "suppressionDuration": {
-      "description": "The duration for which alerts are suppressed after an alert is triggered. ISO-8601 duration (e.g., PT5H).",
-      "type": "string",
-      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
-    },
-    "suppressionEnabled": {
-      "description": "Indicates whether alert suppression is enabled.",
-      "enum": ["true", "false"]
-    },
-    "startTimeUtc": {
-      "description": "The UTC time when the rule should start being active. ISO-8601 format (e.g., 2024-01-01T00:00:00Z).",
-      "type": "string",
-      "format": "date-time"
-    },
-    "tactics": {
-      "description": "MITRE ATT&CK tactics associated with the rule.",
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/schemas/sentinel-detection.schema.json",
+    "title": "Rule Validation Schema",
+    "description": "Validates Sentinel scheduled analytics rules in ARM template YAML format ensuring they are ready to be transformed into JSON and deployed in Microsoft Sentinel.",
+    "type": "object",
+    "additionalProperties": true,
+    "required": ["$schema", "contentVersion", "resources"],
+    "properties": {
+        "$schema": {
+            "description": "ARM deployment template schema URL.",
+            "type": "string",
+            "const": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
+        },
+        "contentVersion": {
+            "description": "ARM template content version.",
+            "type": "string",
+            "const": "1.0.0.0"
+        },
+        "parameters": {
+            "description": "ARM template parameters block.",
+            "type": "object"
+        },
+        "resources": {
+            "description": "Array of ARM resources. For a Sentinel rule, contains exactly one alert rule resource.",
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "name", "type", "kind", "apiVersion", "properties"],
+                "properties": {
+                    "id": {
+                        "description": "Full ARM resource ID expression. Usually built with concat() and resourceId().",
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "name": {
+                        "description": "ARM resource name expression.",
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "type": {
+                        "description": "Azure resource type for a Sentinel alert rule.",
+                        "type": "string",
+                        "const": "Microsoft.OperationalInsights/workspaces/providers/alertRules"
+                    },
+                    "kind": {
+                        "description": "The kind of the rule, which determines the type of analytics rule to be created in Microsoft Sentinel.",
+                        "type": "string",
+                        "const": "Scheduled"
+                    },
+                    "apiVersion": {
+                        "description": "The API version to be used when deploying the rule to Microsoft Sentinel.",
+                        "type": "string",
+                        "const": "2023-12-01-preview"
+                    },
+                    "properties": {
+                        "description": "The actual detection rule logic.",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["displayName", "description", "severity", "enabled", "query", "queryFrequency", "queryPeriod", "triggerOperator", "triggerThreshold"],
+                        "properties": {
+                            "displayName": {
+                                "description": "Human-readable display name of the rule.",
+                                "type": "string",
+                                "minLength": 3,
+                                "maxLength": 128
+                            },
+                            "description": {
+                                "description": "Description of what the rule detects.",
+                                "type": "string",
+                                "minLength": 10
+                            },
+                            "severity": {
+                                "description": "Severity of alerts produced by this rule.",
+                                "type": "string",
+                                "enum": ["Informational", "Low", "Medium", "High"]
+                            },
+                            "enabled": {
+                                "description": "Whether the rule is enabled at deploy time.",
+                                "type": "boolean",
+                                "const": true
+                            },
+                            "query": {
+                                "description": "KQL query that defines the detection logic.",
+                                "type": "string",
+                                "minLength": 10
+                            },
+                            "queryFrequency": {
+                                "description": "How often the query runs. ISO-8601 duration (e.g., PT5M, PT1H).",
+                                "type": "string",
+                                "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+                            },
+                            "queryPeriod": {
+                                "description": "The time range the query looks back on when it runs. ISO-8601 duration (e.g., PT5M, PT1H).",
+                                "type": "string",
+                                "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+                            },
+                            "triggerOperator": {
+                                "description": "The operator used to compare the query results against the trigger threshold.",
+                                "type": "string",
+                                "enum": ["GreaterThan", "LessThan", "Equal", "NotEqual"]
+                            },
+                            "triggerThreshold": {
+                                "description": "The threshold value that determines when an alert is generated based on the query results.",
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            "suppressionDuration": {
+                                "description": "The duration for which alerts are suppressed after an alert is triggered. ISO-8601 duration (e.g., PT5H).",
+                                "type": "string",
+                                "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+                            },
+                            "suppressionEnabled": {
+                                "description": "Indicates whether alert suppression is enabled.",
+                                "type": "boolean"
+                            },
+                            "startTimeUtc": {
+                                "description": "The UTC time when the rule should start being active. ISO-8601 format (e.g., 2024-01-01T00:00:00Z).",
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "tactics": {
+                                "description": "MITRE ATT&CK tactics associated with the rule.",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-}
 }
