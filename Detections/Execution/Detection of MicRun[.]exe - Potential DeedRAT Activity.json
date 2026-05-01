@@ -30,7 +30,6 @@
           "Execution"
         ],
         "techniques": [
-          "T0863",
           "T1053",
           "T1204"
         ],
