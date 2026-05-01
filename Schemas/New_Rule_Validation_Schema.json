@@ -119,7 +119,7 @@
                             },
                             "startTimeUtc": {
                                 "description": "The UTC time when the rule should start being active. ISO-8601 format (e.g., 2024-01-01T00:00:00Z).",
-                                "type": "string",
+                                "type": ["string", "null"],
                                 "format": "date-time"
                             },
                             "tactics": {
