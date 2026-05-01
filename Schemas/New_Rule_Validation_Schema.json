@@ -183,7 +183,7 @@
                                 "type": ["array", "null"],
                                 "items": {
                                     "type": "string",
-                                    "pattern": "^T\\d{4}$"
+                                    "pattern": "^T1\\d{3}$"
                                 }
                             },
                             "subTechniques": {
@@ -191,7 +191,7 @@
                                 "type": ["array", "null"],
                                 "items": {
                                     "type": "string",
-                                    "pattern": "^T\\d{4}\\.\\d{2}$"
+                                    "pattern": "^T1\\d{3}\\.\\d{3}$"
                                 }
                             },
                             "alertRuleTemplateName": {
