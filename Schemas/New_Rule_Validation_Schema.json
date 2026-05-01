@@ -42,12 +42,52 @@
     },
     "enabled": {
       "const": true
-    },
+    }, 
     "query": {
       "type": "string",
       "minLength": 10
+    },
+    "queryFrequency": {
+      "description": "How often the query runs. ISO-8601 duration (e.g., PT5M, PT1H).",
+      "type": "string",
+      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+    },
+    "queryPeriod": {
+      "description": "The time range the query looks back on when it runs. ISO-8601 duration (e.g., PT5M, PT1H).",
+      "type": "string",
+      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+    },
+    "triggerOperator": {
+      "description": "The operator used to compare the query results against the trigger threshold.",
+      "type": "string",
+      "enum": ["GreaterThan", "LessThan", "Equal"]
+    },
+    "triggerThreshold": {
+      "description": "The threshold value that determines when an alert is generated based on the query results.",
+      "type": "number",
+      "minimum": 0
+    },
+    "suppressionDuration": {
+      "description": "The duration for which alerts are suppressed after an alert is triggered. ISO-8601 duration (e.g., PT5H).",
+      "type": "string",
+      "pattern": "^P(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$"
+    },
+    "suppressionEnabled": {
+      "description": "Indicates whether alert suppression is enabled.",
+      "enum": ["true", "false"]
+    },
+    "startTimeUtc": {
+      "description": "The UTC time when the rule should start being active. ISO-8601 format (e.g., 2024-01-01T00:00:00Z).",
+      "type": "string",
+      "format": "date-time"
+    },
+    "tactics": {
+      "description": "MITRE ATT&CK tactics associated with the rule.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
-
 
 
 
