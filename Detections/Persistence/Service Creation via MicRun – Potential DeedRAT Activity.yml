@@ -1,0 +1,71 @@
+$schema: https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#
+contentVersion: 1.0.0.0
+parameters:
+  workspace:
+    type: String
+resources:
+- id: '[concat(resourceId(''Microsoft.OperationalInsights/workspaces/providers'', parameters(''workspace''), ''Microsoft.SecurityInsights''),''/alertRules/5c7eec0b-bfd4-4600-9005-9e73418a9e97'')]'
+  name: '[concat(parameters(''workspace''),''/Microsoft.SecurityInsights/5c7eec0b-bfd4-4600-9005-9e73418a9e97'')]'
+  type: Microsoft.OperationalInsights/workspaces/providers/alertRules
+  kind: Scheduled
+  apiVersion: 2023-12-01-preview
+  properties:
+    displayName: Service Creation via MicRun – Potential DeedRAT Activity
+    description: 'This detection monitors for suspicious service creation activity associated with the DeedRAT backdoor, as
+      used by Chinese APT groups. It identifies two behaviors: (1) the installation of a Windows service where the service
+      name contains MicRun, using Security Event ID 4697, and (2) the execution of a command-line that includes binPath=C:\ProgramData\Micro\Defaults\MicRun.exe,
+      which may indicate that a service is being created or configured via tools like sc.exe. These behaviors align with known
+      persistence techniques used by DeedRAT to maintain access across reboots by installing malicious services. Analysts
+      should investigate these alerts promptly, as they may represent active deployment or reactivation of malware in the
+      environment. MITRE ATT&CK mapping: T1543.003 – Create or Modify System Process: Windows Service. For additional context,
+      see: https://lab52.io/blog/deedrat-backdoor-enhanced-by-chinese-apts-with-advanced-capabilities/'
+    severity: High
+    enabled: true
+    query: "union DeviceProcessEvents, SecurityEvent\r\n|where ProcessCommandLine has \"binPath=C:\\\\ProgramData\\\\Micro\\\
+      \\Defaults\\\\MicRun.exe\" \r\n or (EventID == 4697 and ServiceName contains \"MicRun\")\r\n|project TimeGenerated,\
+      \ ActionType, DeviceName, AccountName, ServiceName, InitiatingProcessCommandLine, InitiatingProcessFileName, InitiatingProcessFolderPath\r\
+      \n|sort by TimeGenerated desc"
+    queryFrequency: PT5M
+    queryPeriod: PT5M
+    triggerOperator: GreaterThan
+    triggerThreshold: 0
+    suppressionDuration: PT5H
+    suppressionEnabled: false
+    startTimeUtc: null
+    tactics:
+    - Persistence
+    techniques:
+    - T1543
+    subTechniques:
+    - T1543.003
+    alertRuleTemplateName: null
+    incidentConfiguration:
+      createIncident: true
+      groupingConfiguration:
+        enabled: true
+        reopenClosedIncident: false
+        lookbackDuration: PT5H
+        matchingMethod: AllEntities
+        groupByEntities: []
+        groupByAlertDetails: []
+        groupByCustomDetails: []
+    eventGroupingSettings:
+      aggregationKind: SingleAlert
+    alertDetailsOverride:
+      alertDynamicProperties: []
+    customDetails: {}
+    entityMappings:
+    - entityType: Account
+      fieldMappings:
+      - identifier: Name
+        columnName: AccountName
+    - entityType: Host
+      fieldMappings:
+      - identifier: HostName
+        columnName: DeviceName
+    - entityType: Process
+      fieldMappings:
+      - identifier: CommandLine
+        columnName: InitiatingProcessCommandLine
+    sentinelEntitiesMappings: null
+    templateVersion: null
