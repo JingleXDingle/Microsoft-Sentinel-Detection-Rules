@@ -10,7 +10,8 @@ A collection of custom detection rules engineered for Microsoft Sentinel, organi
 ├── .github/
 │   └── workflows/
 │       ├── Convert_Detections_YAML.yml     # Auto-converts detection YAMLs to JSON on push
-│       └── Convert_Resources_YAML.yml      # Auto-converts resource YAMLs to JSON on push
+│       ├── Convert_Resources_YAML.yml      # Auto-converts resource YAMLs to JSON on push
+│       └── Validate_Detection_Schema.yml   # Validates rules against schema on push and PR
 ├── Detections/
 │   ├── Collection/
 │   ├── Command and Control/
@@ -29,7 +30,7 @@ A collection of custom detection rules engineered for Microsoft Sentinel, organi
 ├── Resources/
 │   └── Sample Template YAML.yml            # Starter template for new detection rules
 ├── Schemas/
-│   └── Rule_Validation_Schema.json         # JSON schema used for rule validation
+│   └── New_Rule_Validation_Schema.json     # JSON schema used for rule validation
 └── Validation_Scripts/
     └── Schema_Validation.py                # Validates YAML/JSON rules against the schema
 ```
@@ -47,7 +48,16 @@ Detection rules are written in YAML using the Microsoft Sentinel ARM template fo
 A GitHub Actions workflow (`Convert_Detections_YAML.yml`) triggers on every push that touches a `.yml` or `.yaml` file inside the `Detections/` folder. It converts each YAML rule to a formatted JSON file in-place, auto-commits the result, and pushes it back to the repository. The JSON output is what gets deployed to Sentinel.
 
 ### Validation
-The `Schema_Validation.py` script validates both YAML and JSON rule files against the schema defined in `Schemas/Rule_Validation_Schema.json`, ensuring structural correctness before deployment.
+The `Schema_Validation.py` script validates both YAML and JSON rule files against the schema defined in `Schemas/New_Rule_Validation_Schema.json`. The schema enforces structural correctness across all required fields including severity, MITRE ATT&CK tactics and techniques, ISO 8601 duration formats, and entity mappings.
+
+Validation runs automatically via GitHub Actions on every push and pull request targeting main that touches files under `Detections/`. The validation check must pass before any PR can be merged. You can also run validation locally before pushing:
+
+```bash
+python Validation_Scripts/Schema_Validation.py
+```
+
+### Branch Protection
+Main is protected by a branch ruleset that requires the schema validation check to pass before any PR can be merged. Direct force pushes to main are blocked. All changes must flow through a PR from dev, pass validation, and be up to date with main before merging.
 
 ---
 
@@ -77,10 +87,13 @@ Every rule follows the Microsoft Sentinel ARM template schema and includes the f
 2. Rename the file to match your rule's display name.
 3. Fill in all required fields — query, severity, tactics, techniques, entity mappings.
 4. Remove the `id` field entirely if creating a new rule (Sentinel will assign one automatically).
-5. Push your changes. The CI/CD pipeline will automatically generate the corresponding JSON file.
-6. Optionally run `Schema_Validation.py` locally before pushing to catch any structural issues early.
+5. Push your changes to dev and open a PR targeting main.
+6. The schema validation workflow will run automatically on the PR and must pass before merging.
+7. Once the PR is merged, the CI/CD pipeline will automatically generate the corresponding JSON file on main.
 
 > **Note:** When updating an existing rule, copy the full `id` field from the existing rule into the YAML before pushing. This ensures Sentinel updates the rule in-place rather than creating a duplicate.
+
+> **Tip:** Run `Schema_Validation.py` locally before pushing to catch any structural issues before they reach the pipeline.
 
 ---
 
@@ -116,6 +129,7 @@ New-AzResourceGroupDeployment `
 |---|---|
 | Execution | Detection of MicRun.exe – Potential DeedRAT Activity |
 | Persistence | Registry Persistence via MicRun – Potential DeedRAT Activity |
+| Persistence | Service Creation via MicRun – Potential DeedRAT Activity |
 | Lateral Movement | Detection of AD CS Relay and Coercion Tool Usage (ntlmrelayx, PetitPotam, psexec, DCSync) |
 | Lateral Movement | Suspicious NTLM Authentication to Certificate Authority Servers from Unexpected Accounts |
 | Impact | Possible Email Bombing Attack |
