@@ -13,10 +13,7 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'Detections/**/*.yml'
-      - 'Detections/**/*.yaml'
-      - 'Detections/**/*.json'
+
 
   workflow_dispatch:
 
