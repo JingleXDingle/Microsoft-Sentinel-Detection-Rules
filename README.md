@@ -99,7 +99,18 @@ Every rule follows the Microsoft Sentinel ARM template schema and includes the f
 
 ## Deploying a Rule to Sentinel
 
-The generated JSON files are ARM templates ready for deployment. You can deploy them using:
+The generated JSON files are ARM templates ready for deployment. You can deploy them using any of the following methods:
+
+**Microsoft Sentinel Repositories (Recommended)**
+
+Connect this repository directly to your Microsoft Sentinel workspace for fully automated deployment. Once connected, every push to main automatically deploys any new or updated rules to Sentinel with no manual steps required.
+
+1. In the Azure portal, navigate to **Microsoft Sentinel → Content Management → Repositories**
+2. Select **Add new** and authorize GitHub
+3. Select this repository, the `main` branch, and `Analytic Rules` as the content type
+4. Save the connection — Sentinel will automatically deploy rules on every push to main
+
+> **Note:** This feature is currently in Preview. You must have Owner role on the resource group containing your Sentinel workspace to create a connection.
 
 **Azure Portal**
 - Navigate to **Microsoft Sentinel → Analytics → Create → Import rule from ARM template**
@@ -143,4 +154,5 @@ New-AzResourceGroupDeployment `
 - [MITRE ATT&CK Enterprise Matrix](https://attack.mitre.org/tactics/enterprise/)
 - [Microsoft Sentinel Analytics Rule ARM Schema](https://learn.microsoft.com/en-us/azure/templates/microsoft.operationalinsights/workspaces/providers/alertrules)
 - [Microsoft Sentinel Entity Mappings](https://learn.microsoft.com/en-us/azure/sentinel/create-custom-entity-mapping)
+- [Microsoft Sentinel Repositories](https://learn.microsoft.com/en-us/azure/sentinel/ci-cd)
 - [KQL Reference](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/)
