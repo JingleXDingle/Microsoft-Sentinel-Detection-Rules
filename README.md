@@ -50,7 +50,7 @@ A GitHub Actions workflow (`Convert_Detections_YAML.yml`) triggers on every push
 ### Validation
 The `Schema_Validation.py` script validates both YAML and JSON rule files against the schema defined in `Schemas/New_Rule_Validation_Schema.json`. The schema enforces structural correctness across all required fields including severity, MITRE ATT&CK tactics and techniques, ISO 8601 duration formats, and entity mappings.
 
-Validation runs automatically via GitHub Actions on every push and pull request targeting main that touches files any file. The validation check must pass before any PR can be merged. You can also run validation locally before pushing:
+Validation runs automatically via GitHub Actions on every push and pull request targeting main that touches any file. The validation check must pass before any PR can be merged. You can also run validation locally before pushing:
 
 ```bash
 python Validation_Scripts/Schema_Validation.py
