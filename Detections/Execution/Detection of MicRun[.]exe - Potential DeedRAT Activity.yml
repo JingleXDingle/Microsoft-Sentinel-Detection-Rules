@@ -47,7 +47,6 @@ resources:
       tactics: # Include the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
         - Execution
       techniques: # Include the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
-        - T0863
         - T1053
         - T1204
       subTechniques: # Include the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/

@@ -1,23 +1,32 @@
-name: Validate Detection Rules
+name: Validate Detection Rule Schema
 
 on:
   push:
     branches:
-      - dev
       - main
+      - dev
+    paths:
+      - 'Detections/**/*.yml'
+      - 'Detections/**/*.yaml'
+      - 'Detections/**/*.json'
+
   pull_request:
     branches:
       - main
     paths:
-      - 'Detections/**'
-      - 'Schemas/**'
-      - 'Validation_Scripts/**'
+      - 'Detections/**/*.yml'
+      - 'Detections/**/*.yaml'
+      - 'Detections/**/*.json'
+
+  workflow_dispatch:
 
 jobs:
-  validate:
+  validate-schema:
+    name: Validate Detection Rules Against Schema
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -26,7 +35,13 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pyyaml jsonschema
+        run: |
+          pip install jsonschema pyyaml
 
       - name: Run schema validation
-        run: python Validation_Scripts/Schema_Validation.py
+        run: |
+          python Validation_Scripts/Schema_Validation.py
+
+      - name: Validation passed
+        if: success()
+        run: echo "All detection rules passed schema validation."

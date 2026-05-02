@@ -1,0 +1,75 @@
+name: Convert JSON Detection File at Detections Folder to YAML # This workflow converts JSON detection files in the Detections folder to YAML format only if the YAML does not already exist.
+
+on:
+  push:
+    paths: # This workflow triggers on changes to JSON files in the Detections folder.
+      - 'Detections/**/*.json'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  json-to-yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup tools
+        run: |
+          npm install -g yamljs
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Debug tree
+        run: |
+          echo "Repo tree around Detections:"
+          ls -la
+          find . -maxdepth 3 -type d -name "Detections" -print
+
+      - name: Convert JSON files to YAML if YAML does not exist
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Collect JSON files from Detections folder recursively
+          mapfile -d '' files < <(
+            find ./Detections -type f -name "*.json" -print0 2>/dev/null
+          )
+
+          echo "Found ${#files[@]} JSON file(s)."
+          if (( ${#files[@]} == 0 )); then
+            echo "Nothing to convert."
+            exit 0
+          fi
+
+          converted=0
+          skipped=0
+
+          for file in "${files[@]}"; do
+            # Build the expected YAML path for this JSON file
+            yaml_file="${file%.*}.yml"
+
+            # Only convert if the YAML counterpart does not already exist
+            if [[ -f "$yaml_file" ]]; then
+              echo "Skipping (YAML already exists): $yaml_file"
+              (( skipped++ )) || true
+              continue
+            fi
+
+            mkdir -p "$(dirname "$yaml_file")"
+            json2yaml "$file" > "$yaml_file"
+            echo "Wrote: $yaml_file"
+            (( converted++ )) || true
+          done
+
+          echo ""
+          echo "Summary: $converted converted, $skipped skipped (YAML already existed)."
+
+      - name: Commit and push YAML files
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with: # This step commits and pushes the generated YAML files back to the repository.
+          commit_message: "Auto-converted respective JSON detection rule to YAML"
+          file_pattern: "**/**/*.yml"
