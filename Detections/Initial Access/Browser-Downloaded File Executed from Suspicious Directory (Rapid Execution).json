@@ -1,0 +1,112 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspace": {
+      "type": "String"
+    }
+  },
+  "resources": [
+    {
+      "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/SampleValue')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+      "kind": "Scheduled",
+      "apiVersion": "2023-12-01-preview",
+      "properties": {
+        "displayName": "SampleValue",
+        "description": "SampleValue",
+        "severity": "Low",
+        "enabled": true,
+        "query": "let LookbackWindow = 1d; \n let ExecutionWindow = 120min;\n let SuspiciousPaths = dynamic([\n     @\"\\AppData\\Roaming\\\",\n     @\"\\AppData\\Local\\\",\n     @\"\\AppData\\Local\\Temp\\\",\n     @\"\\AppData\\Local\\Packages\\\",\n     @\"\\Windows\\Temp\\\",\n     @\"\\Users\\Public\\\",\n     @\"\\ProgramData\\\"\n ]);\n let BrowserProcesses = dynamic([\n     \"chrome.exe\",\"msedge.exe\",\"firefox.exe\",\"brave.exe\",\n     \"opera.exe\",\"opera_gx.exe\",\"iexplore.exe\",\"vivaldi.exe\",\n     \"arc.exe\",\"browser.exe\",\"librewolf.exe\",\"waterfox.exe\",\n     \"tor.exe\",\"duckduckgo.exe\"\n ]);\n let ExecutableExtensions = dynamic([\n     \"exe\",\"dll\",\"ps1\",\"bat\",\"cmd\",\"vbs\",\"vbe\",\"js\",\"jse\",\n     \"wsf\",\"wsh\",\"hta\",\"scr\",\"lnk\",\"msi\",\"cpl\",\"pif\"\n ]);\n let FileCreated =\n     DeviceFileEvents\n     | where TimeGenerated > ago(LookbackWindow)\n     | where ActionType == \"FileCreated\"\n     | where FolderPath has_any (SuspiciousPaths)\n     | extend FileExtension = tolower(extract(@\"\\.([^.]+)$\", 1, FileName))\n     | where FileExtension in (ExecutableExtensions)\n     | where InitiatingProcessFileName in~ (BrowserProcesses)\n     | project\n         CreationTime      = TimeGenerated,\n         DeviceId,\n         DeviceName,\n         CreatedFileName   = FileName,\n         CreatedFilePath   = FolderPath,\n         CreatedFileSHA256 = SHA256,\n         FileOriginUrl,\n         FileOriginReferrerUrl,\n         FileOriginIP,\n         BrowserProcess    = InitiatingProcessFileName,\n         BrowserCmdLine    = InitiatingProcessCommandLine,\n         BrowserPID        = InitiatingProcessId,\n         CreatorAccount    = InitiatingProcessAccountName;\n let FileExecuted =\n     DeviceProcessEvents\n     | where TimeGenerated > ago(LookbackWindow)\n     | project\n         ExecutionTime      = TimeGenerated,\n         DeviceId,       \n         ExecutedFileName   = FileName,\n         ExecutedFilePath   = FolderPath,\n         ExecutedFileSHA256 = SHA256,\n         ProcessCmdLine     = ProcessCommandLine,\n         ParentProcess      = InitiatingProcessFileName,\n         ParentCmdLine      = InitiatingProcessCommandLine,\n         ExecutedByAccount  = AccountName;\n FileCreated\n | join kind=inner FileExecuted on DeviceId\n | where ExecutionTime between (CreationTime .. (CreationTime + ExecutionWindow))\n | where \n     CreatedFileSHA256 == ExecutedFileSHA256\n     or ProcessCmdLine has CreatedFilePath\n     or ProcessCmdLine has CreatedFileName\n | extend SecondsToExecute = datetime_diff('second', ExecutionTime, CreationTime)\n | extend MatchType =\n     case(\n         CreatedFileSHA256 == ExecutedFileSHA256, \"SHA256 match\",\n         ProcessCmdLine has CreatedFilePath, \"Command line path match\",\n         ProcessCmdLine has CreatedFileName, \"Command line filename match\",\n         \"Unknown\"\n     )\n | extend Severity =\n     case(\n         SecondsToExecute <= 10, \"High\",\n         SecondsToExecute <= 60, \"Medium\",\n         \"Low\"\n     )\n | project\n     CreationTime,\n     ExecutionTime,\n     SecondsToExecute,\n     Severity,\n     MatchType,\n     DeviceName,\n     BrowserProcess,\n     BrowserCmdLine,\n     CreatedFileName,\n     CreatedFilePath,\n     CreatedFileSHA256,\n     FileOriginUrl,\n     FileOriginReferrerUrl,\n     FileOriginIP,\n     ExecutedFileName,\n     ExecutedFilePath,\n     ExecutedFileSHA256,\n     ParentProcess,\n     ParentCmdLine,\n     ProcessCmdLine,\n     ExecutedByAccount\n | sort by CreationTime desc\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT5M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "suppressionDuration": "PT5H",
+        "suppressionEnabled": false,
+        "startTimeUtc": null,
+        "tactics": [
+          "Execution"
+        ],
+        "techniques": [
+          "T0863",
+          "T1053",
+          "T1204"
+        ],
+        "subTechniques": [
+          "T1053.005",
+          "T1204.002"
+        ],
+        "alertRuleTemplateName": null,
+        "incidentConfiguration": {
+          "createIncident": true,
+          "groupingConfiguration": {
+            "enabled": true,
+            "reopenClosedIncident": false,
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "groupByEntities": [],
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": []
+          }
+        },
+        "eventGroupingSettings": {
+          "aggregationKind": "SingleAlert"
+        },
+        "alertDetailsOverride": {
+          "alertDynamicProperties": []
+        },
+        "customDetails": {},
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "AccountName"
+              }
+            ]
+          },
+          {
+            "entityType": "Host",
+            "fieldMappings": [
+              {
+                "identifier": "HostName",
+                "columnName": "DeviceName"
+              }
+            ]
+          },
+          {
+            "entityType": "File",
+            "fieldMappings": [
+              {
+                "identifier": "Name",
+                "columnName": "FileName"
+              }
+            ]
+          },
+          {
+            "entityType": "FileHash",
+            "fieldMappings": [
+              {
+                "identifier": "Value",
+                "columnName": "SHA1"
+              }
+            ]
+          },
+          {
+            "entityType": "Mailbox",
+            "fieldMappings": [
+              {
+                "identifier": "MailboxPrimaryAddress",
+                "columnName": "AccountUpn"
+              }
+            ]
+          }
+        ],
+        "sentinelEntitiesMappings": null,
+        "templateVersion": null
+      }
+    }
+  ]
+}
