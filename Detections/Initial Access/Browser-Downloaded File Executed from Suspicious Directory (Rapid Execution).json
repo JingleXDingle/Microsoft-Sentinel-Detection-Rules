@@ -66,7 +66,7 @@
           "CalculatedSeverity": "Severity",
           "BrowserProcess": "BrowserProcess",
           "ExecutedFileName": "ExecutedFileName",
-          "FileOriginReferrerUrl": "FileOriginReferrerUrl",
+          "OriginReferrerUrl": "FileOriginReferrerUrl",
           "DeviceName": "DeviceName",
           "CreatedFileSHA256": "CreatedFileSHA256"
         },
