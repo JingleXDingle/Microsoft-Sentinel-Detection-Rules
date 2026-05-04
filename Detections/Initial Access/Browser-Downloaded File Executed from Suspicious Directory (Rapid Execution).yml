@@ -1,0 +1,203 @@
+$schema: https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#  # Leave lines 1 to 8 unchanged
+contentVersion: "1.0.0.0" # Leave unchanged.
+parameters: # Leave unchanged.
+  workspace: # Leave unchanged.
+    type: String # Leave unchanged.
+resources:
+   # When creating a new rule, you must remove the "id" field completely. This is so Sentinel automatically assigns a new ID. When updating a rule, you must copy the entire "id" field from the existing rule and add a - symbol before it.
+  - name: "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/Browser-Drop-And-Execute-Suspicious-Path')]" # Change "SampleValue" to a unique name for your detection rule. When updating a rule, you must copy the entire "name" field from the existing rule and remove the - symbol before it.
+    type: Microsoft.OperationalInsights/workspaces/providers/alertRules # Leave unchanged.
+    kind: Scheduled # This must be set to Scheduled for scheduled rules, leave unchanged.
+    apiVersion: 2023-12-01-preview # Leave unchanged.
+    properties: #Properties of the detection rule, leave this line unchanged.
+      displayName: Browser-Downloaded File Executed from Suspicious Directory (Rapid Execution) # Replace with the name of your detection rule. You must follow proper YAML syntax.
+      description: | 
+        Detects a browser writing an executable, script, or DLL to a user-writable directory (AppData, ProgramData, Public, Windows\Temp) followed by execution within a short time window. Correlation is performed via SHA256 hash, full path in command line, or filename in command line - catching both direct execution and interpreter-based launches (powershell.exe, cmd.exe, wscript.exe, mshta.exe, rundll32.exe).
+        
+        This pattern is consistent with content injection delivery, but may also indicate phishing or drive-by compromise. Triage should review the originating URL, parent process chain, and file reputation. Severity is set by time-to-execute - 10s or less = High, 60s or less = Medium, longer = Low.
+        
+        MITRE ATT&CK:
+        T1659 - Content Injection - https://attack.mitre.org/techniques/T1659/
+        T1204.002 - User Execution Malicious File - https://attack.mitre.org/techniques/T1204/002/
+        T1105 - Ingress Tool Transfer - https://attack.mitre.org/techniques/T1105/
+      severity: Medium # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
+      enabled: true # Set to true to enable the rule, false to disable
+      query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax. For multiline queries, use the pipe (|) character at the beggining.
+       let LookbackWindow = 45min; 
+        let ExecutionWindow = 15min;
+        let SuspiciousPaths = dynamic([
+            @"\AppData\Roaming\",
+            @"\AppData\Local\",
+            @"\AppData\Local\Temp\",
+            @"\AppData\Local\Packages\",
+            @"\Windows\Temp\",
+            @"\Users\Public\",
+            @"\ProgramData\"
+        ]);
+        let BrowserProcesses = dynamic([
+            "chrome.exe","msedge.exe","firefox.exe","brave.exe",
+            "opera.exe","opera_gx.exe","iexplore.exe","vivaldi.exe",
+            "arc.exe","browser.exe","librewolf.exe","waterfox.exe",
+            "tor.exe","duckduckgo.exe"
+        ]);
+        let ExecutableExtensions = dynamic([
+            "exe","dll","ps1","bat","cmd","vbs","vbe","js","jse",
+            "wsf","wsh","hta","scr","lnk","msi","cpl","pif"
+        ]);
+        let FileCreated =
+            DeviceFileEvents
+            | where TimeGenerated > ago(LookbackWindow)
+            | where ActionType == "FileCreated"
+            | where FolderPath has_any (SuspiciousPaths)
+            | extend FileExtension = tolower(extract(@"\.([^.]+)$", 1, FileName))
+            | where FileExtension in (ExecutableExtensions)
+            | where InitiatingProcessFileName in~ (BrowserProcesses)
+            | project
+                CreationTime      = TimeGenerated,
+                DeviceId,
+                DeviceName,
+                CreatedFileName   = FileName,
+                CreatedFilePath   = FolderPath,
+                CreatedFileSHA256 = SHA256,
+                FileOriginUrl,
+                FileOriginReferrerUrl,
+                FileOriginIP,
+                BrowserProcess    = InitiatingProcessFileName,
+                BrowserCmdLine    = InitiatingProcessCommandLine,
+                BrowserPID        = InitiatingProcessId,
+                CreatorAccount    = InitiatingProcessAccountName;
+        let FileExecuted =
+            DeviceProcessEvents
+            | where TimeGenerated > ago(LookbackWindow)
+            | project
+                ExecutionTime      = TimeGenerated,
+                DeviceId,       
+                ExecutedFileName   = FileName,
+                ExecutedFilePath   = FolderPath,
+                ExecutedFileSHA256 = SHA256,
+                ProcessCmdLine     = ProcessCommandLine,
+                ParentProcess      = InitiatingProcessFileName,
+                ParentCmdLine      = InitiatingProcessCommandLine,
+                ExecutedByAccount  = AccountName;
+        FileCreated
+        | join kind=inner FileExecuted on DeviceId
+        | where ExecutionTime between (CreationTime .. (CreationTime + ExecutionWindow))
+        | where 
+            CreatedFileSHA256 == ExecutedFileSHA256
+            or ProcessCmdLine has CreatedFilePath
+            or ProcessCmdLine has CreatedFileName
+        | extend SecondsToExecute = datetime_diff('second', ExecutionTime, CreationTime)
+        | extend MatchType =
+            case(
+                CreatedFileSHA256 == ExecutedFileSHA256, "SHA256 match",
+                ProcessCmdLine has CreatedFilePath, "Command line path match",
+                ProcessCmdLine has CreatedFileName, "Command line filename match",
+                "Unknown"
+            )
+        | extend Severity =
+            case(
+                SecondsToExecute <= 10, "High",
+                SecondsToExecute <= 60, "Medium",
+                "Low"
+            )
+        | extend HashAlgorithm = "SHA256"
+        | distinct
+            CreationTime,
+            ExecutionTime,
+            SecondsToExecute,
+            Severity,
+            MatchType,
+            DeviceName,
+            BrowserProcess,
+            BrowserCmdLine,
+            CreatedFileName,
+            CreatedFilePath,
+            CreatedFileSHA256,
+            HashAlgorithm,
+            FileOriginUrl,
+            FileOriginReferrerUrl,
+            FileOriginIP,
+            ExecutedFileName,
+            ExecutedFilePath,
+            ExecutedFileSHA256,
+            ParentProcess,
+            ParentCmdLine,
+            ProcessCmdLine,
+            ExecutedByAccount
+        | sort by CreationTime desc
+      queryFrequency: PT15M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
+      queryPeriod: PT45M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
+      triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
+      triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0 when using GreaterThan.
+      suppressionDuration: PT5H # Replace with how long to suppress duplicate alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
+      suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false.
+      startTimeUtc: null # Leave unchanged
+      tactics:
+        - InitialAccess
+        - CommandAndControl
+        - Execution
+      techniques:
+        - T1105
+        - T1204
+        - T1659
+      subTechniques:
+        - T1204.002
+      alertRuleTemplateName: null # Leave unchanged unless you are using a template.
+      incidentConfiguration:
+        createIncident: true # Set to true to create an incident when this rule triggers, false to only create alerts, usually true.
+        groupingConfiguration:
+          enabled: true
+          reopenClosedIncident: false
+          lookbackDuration: PT5H
+          matchingMethod: Selected
+          groupByEntities: []
+          groupByAlertDetails: []
+          groupByCustomDetails:
+            - DeviceName
+            - CreatedFileSHA256 
+      eventGroupingSettings:
+        aggregationKind: SingleAlert # Leave unchanged, valid values are SingleAlert or AlertPerResult, usually SingleAlert.
+      alertDetailsOverride:
+        alertDynamicProperties: [] # Leave unchanged unless you want to add dynamic properties to the alert.
+      customDetails: 
+        SecondsToExecute: SecondsToExecute
+        MatchType: MatchType
+        CalculatedSeverity: Severity
+        BrowserProcess: BrowserProcess
+        ExecutedFileName: ExecutedFileName
+        OriginReferrerUrl: FileOriginReferrerUrl
+        DeviceName: DeviceName
+        CreatedFileSHA256: CreatedFileSHA256
+      entityMappings: # Replace with mappings from query result columns to entity types, see https://learn.microsoft.com/en-us/azure/sentinel/create-custom-entity-mapping
+        - entityType: Account # Replace with the entity type, e.g. Account, Host, File, FileHash, Mailbox, etc.
+          fieldMappings:
+            - identifier: Name # Replace with the entity field identifier, e.g. Name for Account, HostName for Host, etc.
+              columnName: ExecutedByAccount # Replace with the name of the column in your query results that contains this information. 
+        - entityType: Host
+          fieldMappings:
+            - identifier: HostName
+              columnName: DeviceName
+        - entityType: File
+          fieldMappings:
+            - identifier: Name
+              columnName: CreatedFileName
+        - entityType: FileHash
+          fieldMappings:
+            - identifier: Algorithm
+              columnName: HashAlgorithm
+            - identifier: Value
+              columnName: CreatedFileSHA256
+        - entityType: IP
+          fieldMappings:
+            - identifier: Address
+              columnName: FileOriginIP
+        - entityType: URL
+          fieldMappings:
+            - identifier: Url
+              columnName: FileOriginUrl
+        - entityType: Process
+          fieldMappings:
+            - identifier: CommandLine
+              columnName: ProcessCmdLine
+      sentinelEntitiesMappings: null # Leave unchanged unless you are using Sentinel entity mappings.
+      templateVersion: null # Leave unchanged unless you are using a specific template.
