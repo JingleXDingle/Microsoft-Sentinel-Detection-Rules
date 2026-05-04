@@ -149,7 +149,7 @@ resources:
           enabled: true
           reopenClosedIncident: false
           lookbackDuration: PT5H
-          matchingMethod: CustomDetails
+          matchingMethod: Selected
           groupByEntities: []
           groupByAlertDetails: []
           groupByCustomDetails:
