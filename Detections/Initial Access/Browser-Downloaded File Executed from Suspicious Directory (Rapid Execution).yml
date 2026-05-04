@@ -165,7 +165,7 @@ resources:
         CalculatedSeverity: Severity
         BrowserProcess: BrowserProcess
         ExecutedFileName: ExecutedFileName
-        FileOriginReferrerUrl: FileOriginReferrerUrl
+        OriginReferrerUrl: FileOriginReferrerUrl
         DeviceName: DeviceName
         CreatedFileSHA256: CreatedFileSHA256
       entityMappings: # Replace with mappings from query result columns to entity types, see https://learn.microsoft.com/en-us/azure/sentinel/create-custom-entity-mapping
