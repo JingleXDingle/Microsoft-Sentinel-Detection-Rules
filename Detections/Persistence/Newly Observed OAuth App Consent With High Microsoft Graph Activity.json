@@ -44,10 +44,13 @@
             "enabled": true,
             "reopenClosedIncident": false,
             "lookbackDuration": "PT5H",
-            "matchingMethod": "AllEntities",
+            "matchingMethod": "Selected",
             "groupByEntities": [],
             "groupByAlertDetails": [],
-            "groupByCustomDetails": []
+            "groupByCustomDetails": [
+              "AppId",
+              "ServicePrincipalId"
+            ]
           }
         },
         "eventGroupingSettings": {
@@ -56,7 +59,21 @@
         "alertDetailsOverride": {
           "alertDynamicProperties": []
         },
-        "customDetails": {},
+        "customDetails": {
+          "AppName": "AppName",
+          "AppId": "AppId",
+          "ServicePrincipalId": "ServicePrincipalId",
+          "GraphCallCount": "GraphCallCount",
+          "SuccessfulGraphCallCount": "SuccessfulGraphCallCount",
+          "GraphScopesCustomDetail": "GraphScopesCustomDetail",
+          "GraphRolesCustomDetail": "GraphRolesCustomDetail",
+          "FirstRecentConsentTime": "FirstRecentConsentTime",
+          "FirstGraphCall": "FirstGraphCall",
+          "LastGraphCall": "LastGraphCall",
+          "OperationName": "OperationName",
+          "InitiatedByUser": "InitiatedByUser",
+          "CorrelationId": "CorrelationId"
+        },
         "entityMappings": [
           {
             "entityType": "Account",
