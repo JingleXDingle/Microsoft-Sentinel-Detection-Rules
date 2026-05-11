@@ -14,28 +14,27 @@
       "apiVersion": "2023-12-01-preview",
       "properties": {
         "displayName": "Newly Observed OAuth App Consent With High Microsoft Graph Activity",
-        "description": "SampleValue",
+        "description": "Detects newly observed OAuth consent or permission grant activity for an Entra ID service principal that was not seen in the previous 90 days, followed by Microsoft Graph API activity above the defined threshold. This may indicate a suspicious or unauthorized application using granted permissions to access Microsoft 365 data. Review the app name, App ID, service principal ID, granted permissions, consenting user, and Microsoft Graph activity. Confirm whether the application is legitimate and was deployed or approved by an administrator. If the application is not legitimate or was not approved, disable it through Microsoft Defender for Cloud Apps > App governance, then continue investigating any suspicious Graph activity performed by the app, including access to mail, files, sites, or directory data.",
         "severity": "Low",
         "enabled": true,
-        "query": "let RecentLookback = 24h;\nlet HistoricalLookback = 90d;\nlet MinGraphApiCalls = 100;\nlet ConsentOperations = dynamic([\n    \"Consent to application\",\n    \"Add OAuth2PermissionGrant\",\n    \"Add delegated permission grant\",\n    \"Add app role assignment to service principal\"\n]);\nlet RecentConsentEvents =\nAuditLogs\n| where TimeGenerated >= ago(RecentLookback)\n| where OperationName in~ (ConsentOperations)\n| extend InitiatedByUser = tostring(InitiatedBy.user.userPrincipalName)\n| mv-expand TargetResource = TargetResources\n| extend\n    ServicePrincipalId = tostring(TargetResource.id),\n    TargetResourceType = tostring(TargetResource.type),\n    AppName = tostring(TargetResource.displayName)\n| where TargetResourceType =~ \"ServicePrincipal\"\n| where isnotempty(ServicePrincipalId)\n| summarize arg_min(TimeGenerated, *) by ServicePrincipalId\n| project\n    FirstRecentConsentTime = TimeGenerated,\n    OperationName,\n    ServicePrincipalId,\n    AppName,\n    InitiatedByUser,\n    CorrelationId;\nlet HistoricalConsentEvents =\nAuditLogs\n| where TimeGenerated between (ago(HistoricalLookback) .. ago(RecentLookback))\n| where OperationName in~ (ConsentOperations)\n| mv-expand TargetResource = TargetResources\n| extend\n    ServicePrincipalId = tostring(TargetResource.id),\n    TargetResourceType = tostring(TargetResource.type)\n| where TargetResourceType =~ \"ServicePrincipal\"\n| where isnotempty(ServicePrincipalId)\n| summarize by ServicePrincipalId;\nlet NewConsentEvents =\nRecentConsentEvents\n| join kind=leftanti HistoricalConsentEvents on ServicePrincipalId;\nlet GraphCalls =\nMicrosoftGraphActivityLogs\n| where TimeGenerated >= ago(RecentLookback)\n| where isnotempty(ServicePrincipalId)\n| summarize \n    GraphCallCount = count(),\n    SuccessfulGraphCallCount = countif(ResponseStatusCode between (200 .. 299)),\n    AppId = take_any(AppId),\n    GraphScopes = make_set_if(Scopes, isnotempty(Scopes), 20),\n    GraphRoles = make_set_if(Roles, isnotempty(Roles), 20),\n    FirstGraphCall = min(TimeGenerated),\n    LastGraphCall = max(TimeGenerated)\n    by ServicePrincipalId;\nNewConsentEvents\n| join kind=inner GraphCalls on ServicePrincipalId\n| where GraphCallCount >= MinGraphApiCalls\n| extend GraphRolesCustomDetail = strcat_array(GraphRoles, \", \")\n| extend GraphScopesCustomDetail = strcat_array(GraphScopes, \", \")\n| project \n    AppName,\n    AppId,\n    ServicePrincipalId,\n    GraphCallCount,\n    SuccessfulGraphCallCount,\n    GraphScopesCustomDetail,\n    GraphRolesCustomDetail,\n    FirstRecentConsentTime,\n    FirstGraphCall,\n    LastGraphCall,\n    OperationName,\n    InitiatedByUser,\n    CorrelationId\n| order by GraphCallCount desc\n",
-        "queryFrequency": "PT5M",
-        "queryPeriod": "PT5M",
+        "query": "let RecentLookback = 1h;\nlet HistoricalLookback = 90d;\nlet MinGraphApiCalls = 100;\nlet ConsentOperations = dynamic([\n    \"Consent to application\",\n    \"Add OAuth2PermissionGrant\",\n    \"Add delegated permission grant\",\n    \"Add app role assignment to service principal\"\n]);\nlet RecentConsentEvents =\nAuditLogs\n| where TimeGenerated >= ago(RecentLookback)\n| where OperationName in~ (ConsentOperations)\n| extend InitiatedByUser = tostring(InitiatedBy.user.userPrincipalName)\n| mv-expand TargetResource = TargetResources\n| extend\n    ServicePrincipalId = tostring(TargetResource.id),\n    TargetResourceType = tostring(TargetResource.type),\n    AppName = tostring(TargetResource.displayName)\n| where TargetResourceType =~ \"ServicePrincipal\"\n| where isnotempty(ServicePrincipalId)\n| summarize arg_min(TimeGenerated, *) by ServicePrincipalId\n| project\n    FirstRecentConsentTime = TimeGenerated,\n    OperationName,\n    ServicePrincipalId,\n    AppName,\n    InitiatedByUser,\n    CorrelationId;\nlet HistoricalConsentEvents =\nAuditLogs\n| where TimeGenerated between (ago(HistoricalLookback) .. ago(RecentLookback))\n| where OperationName in~ (ConsentOperations)\n| mv-expand TargetResource = TargetResources\n| extend\n    ServicePrincipalId = tostring(TargetResource.id),\n    TargetResourceType = tostring(TargetResource.type)\n| where TargetResourceType =~ \"ServicePrincipal\"\n| where isnotempty(ServicePrincipalId)\n| summarize by ServicePrincipalId;\nlet NewConsentEvents =\nRecentConsentEvents\n| join kind=leftanti HistoricalConsentEvents on ServicePrincipalId;\nlet GraphCalls =\nMicrosoftGraphActivityLogs\n| where TimeGenerated >= ago(RecentLookback)\n| where isnotempty(ServicePrincipalId)\n| summarize \n    GraphCallCount = count(),\n    SuccessfulGraphCallCount = countif(ResponseStatusCode between (200 .. 299)),\n    AppId = take_any(AppId),\n    GraphScopes = make_set_if(Scopes, isnotempty(Scopes), 20),\n    GraphRoles = make_set_if(Roles, isnotempty(Roles), 20),\n    FirstGraphCall = min(TimeGenerated),\n    LastGraphCall = max(TimeGenerated)\n    by ServicePrincipalId;\nNewConsentEvents\n| join kind=inner GraphCalls on ServicePrincipalId\n| where GraphCallCount >= MinGraphApiCalls\n| extend GraphRolesCustomDetail = strcat_array(GraphRoles, \", \")\n| extend GraphScopesCustomDetail = strcat_array(GraphScopes, \", \")\n| project \n    AppName,\n    AppId,\n    ServicePrincipalId,\n    GraphCallCount,\n    SuccessfulGraphCallCount,\n    GraphScopesCustomDetail,\n    GraphRolesCustomDetail,\n    FirstRecentConsentTime,\n    FirstGraphCall,\n    LastGraphCall,\n    OperationName,\n    InitiatedByUser,\n    CorrelationId\n| order by GraphCallCount desc\n",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "PT90D",
         "triggerOperator": "GreaterThan",
         "triggerThreshold": 0,
         "suppressionDuration": "PT5H",
         "suppressionEnabled": false,
         "startTimeUtc": null,
         "tactics": [
-          "Execution"
+          "CredentialAccess",
+          "InitialAccess",
+          "Persistence"
         ],
         "techniques": [
-          "T0863",
-          "T1053",
-          "T1204"
+          "T1528"
         ],
         "subTechniques": [
-          "T1053.005",
-          "T1204.002"
+          "T1078.004"
         ],
         "alertRuleTemplateName": null,
         "incidentConfiguration": {
@@ -74,53 +73,7 @@
           "InitiatedByUser": "InitiatedByUser",
           "CorrelationId": "CorrelationId"
         },
-        "entityMappings": [
-          {
-            "entityType": "Account",
-            "fieldMappings": [
-              {
-                "identifier": "Name",
-                "columnName": "AccountName"
-              }
-            ]
-          },
-          {
-            "entityType": "Host",
-            "fieldMappings": [
-              {
-                "identifier": "HostName",
-                "columnName": "DeviceName"
-              }
-            ]
-          },
-          {
-            "entityType": "File",
-            "fieldMappings": [
-              {
-                "identifier": "Name",
-                "columnName": "FileName"
-              }
-            ]
-          },
-          {
-            "entityType": "FileHash",
-            "fieldMappings": [
-              {
-                "identifier": "Value",
-                "columnName": "SHA1"
-              }
-            ]
-          },
-          {
-            "entityType": "Mailbox",
-            "fieldMappings": [
-              {
-                "identifier": "MailboxPrimaryAddress",
-                "columnName": "AccountUpn"
-              }
-            ]
-          }
-        ],
+        "entityMappings": null,
         "sentinelEntitiesMappings": null,
         "templateVersion": null
       }
