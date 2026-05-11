@@ -92,7 +92,7 @@ resources:
             CorrelationId
         | order by GraphCallCount desc
       queryFrequency: PT1H # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
-      queryPeriod: PT90D # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
+      queryPeriod: P90D # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
       triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
       triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0 when using GreaterThan.
       suppressionDuration: PT5H # Replace with how long to suppress duplicate alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
@@ -128,10 +128,9 @@ resources:
         AppId: AppId
         ServicePrincipalId: ServicePrincipalId
         GraphCallCount: GraphCallCount
-        SuccessfulGraphCallCount: SuccessfulGraphCallCount
-        GraphScopesCustomDetail: GraphScopesCustomDetail
-        GraphRolesCustomDetail: GraphRolesCustomDetail
-        FirstRecentConsentTime: FirstRecentConsentTime
+        GraphScopes: GraphScopesCustomDetail
+        GraphRoles: GraphRolesCustomDetail
+        RecentConsentTime: FirstRecentConsentTime
         FirstGraphCall: FirstGraphCall
         LastGraphCall: LastGraphCall
         OperationName: OperationName
