@@ -11,11 +11,11 @@ resources:
     apiVersion: 2023-12-01-preview # Leave unchanged.
     properties: #Properties of the detection rule, leave this line unchanged.
       displayName: Newly Observed OAuth App Consent With High Microsoft Graph Activity # Replace with the name of your detection rule. You must follow proper YAML syntax.
-      description: SampleValue # Replace with the description of your detection rule, you must follow proper YAML syntax.
+      description: Detects newly observed OAuth consent or permission grant activity for an Entra ID service principal that was not seen in the previous 90 days, followed by Microsoft Graph API activity above the defined threshold. This may indicate a suspicious or unauthorized application using granted permissions to access Microsoft 365 data. Review the app name, App ID, service principal ID, granted permissions, consenting user, and Microsoft Graph activity. Confirm whether the application is legitimate and was deployed or approved by an administrator. If the application is not legitimate or was not approved, disable it through Microsoft Defender for Cloud Apps > App governance, then continue investigating any suspicious Graph activity performed by the app, including access to mail, files, sites, or directory data. # Replace with the description of your detection rule, you must follow proper YAML syntax.
       severity: Low # Replace with the severity of your detection rule, valid values are Informational, Low, Medium, and High.
       enabled: true # Set to true to enable the rule, false to disable
       query: | # Replace with the KQL query for your detection rule, you must follow proper YAML syntax. For multiline queries, use the pipe (|) character at the beggining.
-        let RecentLookback = 24h;
+        let RecentLookback = 1h;
         let HistoricalLookback = 90d;
         let MinGraphApiCalls = 100;
         let ConsentOperations = dynamic([
@@ -91,22 +91,21 @@ resources:
             InitiatedByUser,
             CorrelationId
         | order by GraphCallCount desc
-      queryFrequency: PT5M # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
-      queryPeriod: PT5M # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
+      queryFrequency: PT1H # Replace with how often the query runs, PT5M means every 5 minutes, PT5H means every 5 hours, etc.
+      queryPeriod: PT90D # Replace with the time range the query looks back, PT5M means the last 5 minutes, PT1H means the last hour, etc.
       triggerOperator: GreaterThan # Leave unchanged. Valid values are GreaterThan, LessThan, Equal, NotEqual.
       triggerThreshold: 0 # Replace with the number of results that will trigger an alert, usually 0 when using GreaterThan.
       suppressionDuration: PT5H # Replace with how long to suppress duplicate alerts, PT5H means 5 hours, PT1H means 1 hour, etc.
       suppressionEnabled: false # Set to true to enable suppression, false to disable, usually false.
       startTimeUtc: null # Leave unchanged
       tactics: # Include the MITRE ATT&CK tactics that apply to this rule, see https://attack.mitre.org/tactics/enterprise/
-        - Execution
+          - CredentialAccess
+          - InitialAccess
+          - Persistence
       techniques: # Include the MITRE ATT&CK techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
-        - T0863
-        - T1053
-        - T1204
+        - T1528
       subTechniques: # Include the MITRE ATT&CK sub-techniques that apply to this rule, see https://attack.mitre.org/techniques/enterprise/
-        - T1053.005
-        - T1204.002
+        - T1078.004
       alertRuleTemplateName: null # Leave unchanged unless you are using a template.
       incidentConfiguration:
         createIncident: true # Set to true to create an incident when this rule triggers, false to only create alerts, usually true.
@@ -139,25 +138,5 @@ resources:
         InitiatedByUser: InitiatedByUser
         CorrelationId: CorrelationId
       entityMappings: # Replace with mappings from query result columns to entity types, see https://learn.microsoft.com/en-us/azure/sentinel/create-custom-entity-mapping
-        - entityType: Account # Replace with the entity type, e.g. Account, Host, File, FileHash, Mailbox, etc.
-          fieldMappings:
-            - identifier: Name # Replace with the entity field identifier, e.g. Name for Account, HostName for Host, etc.
-              columnName: AccountName # Replace with the name of the column in your query results that contains this information. 
-        - entityType: Host
-          fieldMappings:
-            - identifier: HostName
-              columnName: DeviceName
-        - entityType: File
-          fieldMappings:
-            - identifier: Name
-              columnName: FileName
-        - entityType: FileHash
-          fieldMappings:
-            - identifier: Value
-              columnName: SHA1
-        - entityType: Mailbox
-          fieldMappings:
-            - identifier: MailboxPrimaryAddress
-              columnName: AccountUpn
       sentinelEntitiesMappings: null # Leave unchanged unless you are using Sentinel entity mappings.
       templateVersion: null # Leave unchanged unless you are using a specific template.
