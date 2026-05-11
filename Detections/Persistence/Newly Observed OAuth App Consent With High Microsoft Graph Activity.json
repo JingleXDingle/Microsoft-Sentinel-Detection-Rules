@@ -33,9 +33,7 @@
         "techniques": [
           "T1528"
         ],
-        "subTechniques": [
-          "T1078.004"
-        ],
+        "subTechniques": null,
         "alertRuleTemplateName": null,
         "incidentConfiguration": {
           "createIncident": true,
